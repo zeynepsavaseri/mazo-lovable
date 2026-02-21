@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User } from "lucide-react";
+import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 
 const SYMPTOM_OPTIONS = [
@@ -41,6 +41,31 @@ export default function PatientIntake() {
   const [customHistory, setCustomHistory] = useState("");
   const [wearableHR, setWearableHR] = useState("");
   const [wearableSleep, setWearableSleep] = useState("");
+  const [attachments, setAttachments] = useState<{ type: string; name: string; url: string }[]>([]);
+
+  const handleFileUpload = (accept: string, type: string) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = accept;
+    if (type === "photo") input.setAttribute("capture", "environment");
+    if (type === "video") input.setAttribute("capture", "environment");
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        setAttachments((prev) => [...prev, { type, name: file.name, url }]);
+        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} attached`);
+      }
+    };
+    input.click();
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => {
+      URL.revokeObjectURL(prev[index].url);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const toggleItem = (item: string, list: string[], setter: (v: string[]) => void) => {
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
@@ -133,15 +158,64 @@ export default function PatientIntake() {
                 <Stethoscope className="h-5 w-5 text-primary" />
                 Chief Complaint
               </CardTitle>
-              <CardDescription>What brings you to the ER today?</CardDescription>
+              <CardDescription>What brings you to the ER today? Type, or attach a photo / voice / video.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <Textarea
                 placeholder="Describe your main concern in your own words..."
                 value={complaint}
                 onChange={(e) => setComplaint(e.target.value)}
                 className="min-h-[100px] resize-none"
               />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => handleFileUpload("image/*", "photo")}
+                >
+                  <Camera className="h-4 w-4" />
+                  Photo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => handleFileUpload("audio/*", "voice")}
+                >
+                  <Mic className="h-4 w-4" />
+                  Voice
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => handleFileUpload("video/*", "video")}
+                >
+                  <Video className="h-4 w-4" />
+                  Video
+                </Button>
+              </div>
+              {attachments.length > 0 && (
+                <div className="space-y-2">
+                  {attachments.map((att, i) => (
+                    <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-2 text-sm">
+                      <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="truncate text-foreground">{att.name}</span>
+                      <Badge variant="secondary" className="text-xs shrink-0">{att.type}</Badge>
+                      <button
+                        onClick={() => removeAttachment(i)}
+                        className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
