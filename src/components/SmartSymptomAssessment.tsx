@@ -428,18 +428,7 @@ export function SmartSymptomAssessment({ onChange }: Props) {
         </div>
       )}
 
-      {/* Red-flag alert */}
-      {detectedFlags.length > 0 && (
-        <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-4 space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-2 font-semibold text-destructive">
-            <AlertTriangle className="h-5 w-5" />
-            <span>⚠️ Potential emergency pattern detected</span>
-          </div>
-          {detectedFlags.map((f, i) => (
-            <p key={i} className="text-sm text-destructive/90 pl-7">• {f}</p>
-          ))}
-        </div>
-      )}
+      {/* Red flags detected silently — passed to backend for nurse review, not shown to patient */}
 
       {/* Dynamic follow-ups per selected symptom */}
       {activeCategories.map((cat) => (
