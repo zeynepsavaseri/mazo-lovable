@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { CameraModal } from "@/components/CameraModal";
+import { HeartRateAnalysis } from "@/components/HeartRateAnalysis";
 
 const SYMPTOM_OPTIONS = [
   "Chest pain", "Shortness of breath", "Fever", "Headache", "Nausea",
@@ -465,6 +466,13 @@ export default function PatientIntake() {
               />
             </CardContent>
           </Card>
+
+          {/* AI Heart Rate Analysis */}
+          <HeartRateAnalysis onResult={(result) => {
+            if (!wearableHR && result.estimatedHR) {
+              setWearableHR(String(result.estimatedHR));
+            }
+          }} />
 
           {/* Wearable Data */}
           <Card>
