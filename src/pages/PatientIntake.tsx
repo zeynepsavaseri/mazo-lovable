@@ -10,7 +10,14 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip } from "lucide-react";
+import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip, MapPin, Phone, Weight, ShieldAlert, Building2, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CameraModal } from "@/components/CameraModal";
 import { HeartRateAnalysis } from "@/components/HeartRateAnalysis";
@@ -31,10 +38,18 @@ const HISTORY_OPTIONS = [
 export default function PatientIntake() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState<Date>();
   const [consentGiven, setConsentGiven] = useState(false);
   const [gender, setGender] = useState("");
   const [ethnicity, setEthnicity] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [weight, setWeight] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [previousVisit, setPreviousVisit] = useState<string>("");
+  const [isRetrievingRecords, setIsRetrievingRecords] = useState(false);
+  const [retrievedRecords, setRetrievedRecords] = useState<any>(null);
   const [complaint, setComplaint] = useState("");
   const [onset, setOnset] = useState("");
   const [painScore, setPainScore] = useState([3]);
@@ -147,14 +162,31 @@ export default function PatientIntake() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm">Age</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 35"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    className="mt-1.5"
-                  />
+                  <Label className="text-sm">Date of Birth</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "mt-1.5 w-full justify-start text-left font-normal",
+                          !dateOfBirth && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Select date of birth</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateOfBirth}
+                        onSelect={setDateOfBirth}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label className="text-sm">Gender</Label>
@@ -189,7 +221,140 @@ export default function PatientIntake() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label className="text-sm">Weight (kg)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 70"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Allergies</Label>
+                  <Input
+                    placeholder="e.g., Penicillin, Peanuts..."
+                    value={allergies}
+                    onChange={(e) => setAllergies(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Details */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Phone className="h-5 w-5 text-primary" />
+                Contact Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-sm">Phone Number</Label>
+                  <Input
+                    type="tel"
+                    placeholder="e.g., +1 (555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Email Address</Label>
+                  <Input
+                    type="email"
+                    placeholder="e.g., john@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label className="text-sm">Address</Label>
+                  <Input
+                    placeholder="e.g., 123 Main St, City, State, ZIP"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Previous Hospital Visit */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Building2 className="h-5 w-5 text-primary" />
+                Previous Hospital Visit
+              </CardTitle>
+              <CardDescription>Have you visited this hospital before?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <RadioGroup value={previousVisit} onValueChange={async (value) => {
+                setPreviousVisit(value);
+                if (value === "yes" && name.trim()) {
+                  setIsRetrievingRecords(true);
+                  setRetrievedRecords(null);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("retrieve-patient-records", {
+                      body: { patientName: name, dateOfBirth: dateOfBirth?.toISOString() },
+                    });
+                    if (error) throw error;
+                    setRetrievedRecords(data);
+                    if (data?.found) {
+                      toast.success("Previous medical records retrieved successfully!");
+                      if (data.medicalHistory?.length) {
+                        setSelectedHistory((prev) => [...new Set([...prev, ...data.medicalHistory])]);
+                      }
+                      if (data.medications) {
+                        setMedications((prev) => prev ? prev : data.medications);
+                      }
+                      if (data.allergies && !allergies) {
+                        setAllergies(data.allergies);
+                      }
+                    } else {
+                      toast.info("No previous records found. Please fill in your details manually.");
+                    }
+                  } catch {
+                    toast.info("Could not retrieve records automatically. Please fill in your details manually.");
+                  } finally {
+                    setIsRetrievingRecords(false);
+                  }
+                }
+              }} className="flex gap-4">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 transition-colors hover:bg-muted has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-accent">
+                  <RadioGroupItem value="yes" />
+                  <span className="text-sm font-medium">Yes</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border p-3 transition-colors hover:bg-muted has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-accent">
+                  <RadioGroupItem value="no" />
+                  <span className="text-sm font-medium">No</span>
+                </label>
+              </RadioGroup>
+
+              {isRetrievingRecords && (
+                <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  Retrieving your previous medical records...
+                </div>
+              )}
+
+              {retrievedRecords?.found && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                  <p className="font-medium text-primary flex items-center gap-1.5">
+                    <ShieldAlert className="h-4 w-4" />
+                    Previous records found and auto-filled
+                  </p>
+                  <p className="mt-1 text-muted-foreground">Your medical history, medications, and allergies have been pre-populated from your previous visit. Please review and update if needed.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
