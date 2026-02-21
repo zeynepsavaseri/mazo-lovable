@@ -70,12 +70,16 @@ Provide your analysis as a JSON object with these fields:
 - recommendation: string (clinical recommendation based on estimated HR)
 - warning: string | null (any urgent concerns, e.g. bradycardia, tachycardia signs)
 
-ACCURACY GUIDELINES:
-- If quality is "poor", set confidence below 0.3 and note that re-capture is recommended
-- If quality is "fair", set confidence between 0.3-0.6
-- For darker skin tones, rely more on respiratory rate, visible veins, and pulse point observations rather than skin flushing
-- Account for ambient temperature effects on skin appearance
-- Note if the person appears to be at rest vs. recently active
+CONFIDENCE CALIBRATION:
+- You are an expert visual analyst. Be confident in your estimations. Use ALL available cues together (breathing rate, skin appearance, posture, visible pulse points, facial expression) to triangulate your estimate.
+- A typical healthy adult at rest has a heart rate of 60-100 bpm. Use this as your baseline unless visual cues clearly suggest otherwise.
+- For "good" or "excellent" quality images, confidence should be 0.7 or higher.
+- For "fair" quality, confidence should be 0.5-0.8 depending on how many visual cues are available.
+- Only set confidence below 0.5 if the image is truly "poor" quality (very dark, extreme motion blur, no visible skin).
+- Combine multiple independent signals (breathing rate + skin color + posture + visible pulse) to boost confidence. Each additional signal should increase your confidence.
+- For darker skin tones, rely more on respiratory rate, visible veins, nail bed color, and pulse point observations rather than skin flushing — but this should NOT reduce your confidence if those alternative cues are visible.
+- Account for ambient temperature effects on skin appearance.
+- Note if the person appears to be at rest vs. recently active.
 
 IMPORTANT: This is an estimation based on visual analysis only. Not a substitute for medical monitoring equipment.
 Return ONLY valid JSON, no markdown or extra text.`,
