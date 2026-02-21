@@ -12,10 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip, MapPin, Phone, Weight, ShieldAlert, Building2, Loader2, Bluetooth, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DobPicker } from "@/components/DobPicker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -228,30 +226,7 @@ export default function PatientIntake() {
                 </div>
                 <div>
                   <Label className="text-sm">Date of Birth</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "mt-1.5 w-full justify-start text-left font-normal",
-                          !dateOfBirth && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Select date of birth</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateOfBirth}
-                        onSelect={setDateOfBirth}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <DobPicker value={dateOfBirth} onChange={setDateOfBirth} />
                 </div>
                 <div>
                   <Label className="text-sm">Gender</Label>
