@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User } from "lucide-react";
 import { toast } from "sonner";
 
 const SYMPTOM_OPTIONS = [
@@ -27,6 +28,9 @@ const HISTORY_OPTIONS = [
 
 export default function PatientIntake() {
   const navigate = useNavigate();
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [ethnicity, setEthnicity] = useState("");
   const [complaint, setComplaint] = useState("");
   const [onset, setOnset] = useState("");
   const [painScore, setPainScore] = useState([3]);
@@ -65,6 +69,63 @@ export default function PatientIntake() {
         </div>
 
         <div className="space-y-6">
+          {/* Demographics */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5 text-primary" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <Label className="text-sm">Age</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 35"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Gender</Label>
+                  <Select value={gender} onValueChange={setGender}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="non-binary">Non-binary</SelectItem>
+                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Ethnicity</Label>
+                  <Select value={ethnicity} onValueChange={setEthnicity}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select ethnicity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="white">White</SelectItem>
+                      <SelectItem value="black">Black or African American</SelectItem>
+                      <SelectItem value="hispanic">Hispanic or Latino</SelectItem>
+                      <SelectItem value="asian">Asian</SelectItem>
+                      <SelectItem value="native-american">Native American</SelectItem>
+                      <SelectItem value="pacific-islander">Pacific Islander</SelectItem>
+                      <SelectItem value="mixed">Mixed / Multiracial</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Chief Complaint */}
           <Card>
             <CardHeader className="pb-3">
