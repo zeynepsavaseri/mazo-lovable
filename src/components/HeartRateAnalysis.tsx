@@ -3,14 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Heart, Video, RotateCcw, Square, Activity, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Heart, Video, RotateCcw, Square, Activity, AlertTriangle, CheckCircle2, XCircle, Sun, Move, User, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+interface QualityChecks {
+  adequateLighting: boolean;
+  minimalMotion: boolean;
+  faceCentered: boolean;
+  skinVisible: boolean;
+}
+
 interface HeartRateResult {
   estimatedHR: number;
-  confidence: "low" | "medium" | "high";
+  confidence: number;
+  qualityChecks: QualityChecks;
+  qualityIssues: string[];
+  overallQuality: "poor" | "fair" | "good" | "excellent";
   observations: string[];
+  skinToneAdaptation: string;
   recommendation: string;
   warning: string | null;
 }
@@ -160,14 +171,25 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     }
   };
 
-  const confidenceColor = {
-    low: "text-triage-high",
-    medium: "text-triage-moderate",
-    high: "text-triage-low",
+  const qualityColor: Record<string, string> = {
+    poor: "text-destructive",
+    fair: "text-triage-high",
+    good: "text-triage-moderate",
+    excellent: "text-triage-low",
   };
+
+  const confidencePercent = (c: number) => Math.round(c * 100);
 
   const hrColor = (hr: number) =>
     hr < 60 || hr > 100 ? "text-triage-high" : "text-triage-low";
+
+  const QualityCheckItem = ({ passed, label, icon: Icon }: { passed: boolean; label: string; icon: React.ElementType }) => (
+    <div className="flex items-center gap-2 text-sm">
+      {passed ? <CheckCircle2 className="h-4 w-4 text-triage-low shrink-0" /> : <XCircle className="h-4 w-4 text-destructive shrink-0" />}
+      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <span className={passed ? "text-muted-foreground" : "text-destructive font-medium"}>{label}</span>
+    </div>
+  );
 
   return (
     <Card>
@@ -179,7 +201,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
         </CardTitle>
         <CardDescription>
           Record a short video and our AI will estimate your heart rate from visual cues.
-          Position your face or wrist clearly in frame.
+          Position your face or wrist clearly in frame with good lighting.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -225,11 +247,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
               <Button variant="outline" size="icon" onClick={handleFlip} disabled={isRecording || isAnalyzing}>
                 <RotateCcw className="h-4 w-4" />
               </Button>
-              <Button
-                onClick={startAnalysis}
-                disabled={isRecording || isAnalyzing || !!error}
-                className="gap-2"
-              >
+              <Button onClick={startAnalysis} disabled={isRecording || isAnalyzing || !!error} className="gap-2">
                 <Heart className="h-4 w-4" />
                 {isRecording ? "Recording..." : isAnalyzing ? "Analyzing..." : "Start Analysis"}
               </Button>
@@ -252,9 +270,15 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
                   <p className="text-xs text-muted-foreground">Estimated Heart Rate</p>
                 </div>
               </div>
-              <Badge variant="outline" className={confidenceColor[result.confidence]}>
-                {result.confidence} confidence
-              </Badge>
+              <div className="text-right">
+                <Badge variant="outline" className={qualityColor[result.overallQuality] || ""}>
+                  {result.overallQuality} quality
+                </Badge>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <Progress value={confidencePercent(result.confidence)} className="w-20 h-2" />
+                  <span className="text-xs font-medium text-muted-foreground">{confidencePercent(result.confidence)}%</span>
+                </div>
+              </div>
             </div>
 
             {result.warning && (
@@ -263,6 +287,26 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
                 {result.warning}
               </div>
             )}
+
+            <div>
+              <p className="text-sm font-medium mb-2">Quality Checks</p>
+              <div className="grid grid-cols-2 gap-2">
+                <QualityCheckItem passed={result.qualityChecks.adequateLighting} label="Lighting" icon={Sun} />
+                <QualityCheckItem passed={result.qualityChecks.minimalMotion} label="Minimal motion" icon={Move} />
+                <QualityCheckItem passed={result.qualityChecks.faceCentered} label="Face centered" icon={User} />
+                <QualityCheckItem passed={result.qualityChecks.skinVisible} label="Skin visible" icon={Eye} />
+              </div>
+              {result.qualityIssues.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {result.qualityIssues.map((issue, i) => (
+                    <p key={i} className="text-xs text-destructive flex items-center gap-1.5">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      {issue}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div>
               <p className="text-sm font-medium mb-1.5">Observations</p>
@@ -275,6 +319,13 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
                 ))}
               </ul>
             </div>
+
+            {result.skinToneAdaptation && (
+              <div>
+                <p className="text-sm font-medium mb-1">Skin Tone Adaptation</p>
+                <p className="text-sm text-muted-foreground">{result.skinToneAdaptation}</p>
+              </div>
+            )}
 
             <div>
               <p className="text-sm font-medium mb-1">Recommendation</p>
