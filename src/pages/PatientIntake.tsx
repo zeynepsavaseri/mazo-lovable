@@ -170,6 +170,7 @@ export default function PatientIntake() {
       const { error: dbError } = await supabase.from("patient_submissions").insert({
         ...submissionData,
         ai_triage_level: triageData.ai_triage_level || null,
+        acuity_score: triageData.acuity_score ?? null,
         ai_summary: triageData.ai_summary || null,
         red_flags: triageData.red_flags || [],
         risk_signals: triageData.risk_signals || [],
@@ -348,8 +349,8 @@ export default function PatientIntake() {
                       if (data.medicalHistory?.length) {
                         setSelectedHistory((prev) => [...new Set([...prev, ...data.medicalHistory])]);
                       }
-                      if (data.medications) {
-                        setMedications((prev) => prev ? prev : data.medications);
+                      if (data.medications && !medications) {
+                        setMedications(data.medications);
                       }
                       if (data.allergies && !allergies) {
                         setAllergies(data.allergies);
