@@ -110,10 +110,8 @@ export default function PatientIntake() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">No pain</span>
+                <div className="flex items-center justify-center mb-1">
                   <span className={`text-2xl font-bold ${painColor}`}>{painScore[0]}</span>
-                  <span className="text-sm text-muted-foreground">Worst</span>
                 </div>
                 <Slider
                   value={painScore}
@@ -122,6 +120,16 @@ export default function PatientIntake() {
                   min={0}
                   step={1}
                 />
+                <div className="flex items-center justify-between">
+                  <div className="text-center">
+                    <span className="text-xs text-muted-foreground">0</span>
+                    <p className="text-xs text-muted-foreground">No pain</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-xs text-muted-foreground">10</span>
+                    <p className="text-xs text-muted-foreground">Worst</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
