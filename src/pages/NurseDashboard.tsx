@@ -12,6 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, Clock, Users, Activity, Shield, RefreshCw } from "lucide-react";
@@ -28,6 +38,7 @@ interface Submission {
   ai_triage_level: string | null;
   red_flags: string[];
   nurse_decision: string | null;
+  status: string;
   created_at: string;
 }
 
@@ -35,12 +46,15 @@ export default function NurseDashboard() {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [overrideTarget, setOverrideTarget] = useState<Submission | null>(null);
+  const [overrideLevel, setOverrideLevel] = useState<TriageLevel>("moderate");
 
   const fetchSubmissions = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("patient_submissions")
-      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, red_flags, nurse_decision, created_at")
+      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, red_flags, nurse_decision, status, created_at")
+      .eq("status", "waiting")
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Failed to load patient submissions");
@@ -70,19 +84,36 @@ export default function NurseDashboard() {
     ? Math.round(submissions.reduce((sum, s) => sum + getWaitMinutes(s.created_at), 0) / submissions.length)
     : 0;
 
-  const handleDecision = async (id: string, decision: "accept" | "override") => {
+  const handleAccept = async (id: string) => {
     const { error } = await supabase
       .from("patient_submissions")
-      .update({ nurse_decision: decision })
+      .update({ nurse_decision: "accept", status: "in_treatment" })
       .eq("id", id);
     if (error) {
       toast.error("Failed to save decision");
     } else {
-      setSubmissions((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, nurse_decision: decision } : s))
-      );
-      toast.success(decision === "accept" ? "AI triage accepted" : "Triage overridden");
+      setSubmissions((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Patient accepted — moved to treatment");
     }
+  };
+
+  const handleOverrideConfirm = async () => {
+    if (!overrideTarget) return;
+    const { error } = await supabase
+      .from("patient_submissions")
+      .update({
+        nurse_decision: "override",
+        ai_triage_level: overrideLevel,
+        status: "in_treatment",
+      })
+      .eq("id", overrideTarget.id);
+    if (error) {
+      toast.error("Failed to save override");
+    } else {
+      setSubmissions((prev) => prev.filter((s) => s.id !== overrideTarget.id));
+      toast.success(`Triage overridden to ${overrideLevel} — moved to treatment`);
+    }
+    setOverrideTarget(null);
   };
 
   const sortedSubmissions = [...submissions].sort((a, b) => {
@@ -225,21 +256,17 @@ export default function NurseDashboard() {
                         <span className="font-semibold tabular-nums">{sub.pain_score}/10</span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {sub.nurse_decision ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
-                            <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.5} />
-                            {sub.nurse_decision === "accept" ? "Accepted" : "Overridden"}
-                          </span>
-                        ) : (
-                          <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleDecision(sub.id, "accept")}>
-                              Accept
-                            </Button>
-                            <Button size="sm" variant="secondary" className="h-8 text-xs" onClick={() => handleDecision(sub.id, "override")}>
-                              Override
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleAccept(sub.id)}>
+                            Accept
+                          </Button>
+                          <Button size="sm" variant="secondary" className="h-8 text-xs" onClick={() => {
+                            setOverrideTarget(sub);
+                            setOverrideLevel((sub.ai_triage_level as TriageLevel) || "moderate");
+                          }}>
+                            Override
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -248,6 +275,35 @@ export default function NurseDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Override Dialog */}
+        <Dialog open={!!overrideTarget} onOpenChange={(open) => !open && setOverrideTarget(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Override Triage Level</DialogTitle>
+              <DialogDescription>
+                Select the correct triage level for <strong>{overrideTarget?.name}</strong>.
+                Current AI assessment: <strong>{overrideTarget?.ai_triage_level || "none"}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+            <RadioGroup value={overrideLevel} onValueChange={(v) => setOverrideLevel(v as TriageLevel)} className="space-y-3 py-2">
+              {(["high", "moderate", "low"] as TriageLevel[]).map((level) => (
+                <label
+                  key={level}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-accent"
+                >
+                  <RadioGroupItem value={level} />
+                  <TriageBadge level={level} />
+                  <span className="text-sm font-medium capitalize">{level} Priority</span>
+                </label>
+              ))}
+            </RadioGroup>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOverrideTarget(null)}>Cancel</Button>
+              <Button onClick={handleOverrideConfirm}>Confirm Override</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
