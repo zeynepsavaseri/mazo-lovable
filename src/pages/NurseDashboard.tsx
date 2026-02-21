@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/AppHeader";
 import { TriageBadge } from "@/components/TriageBadge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ interface Submission {
   chief_complaint: string;
   pain_score: number;
   ai_triage_level: string | null;
+  acuity_score: number | null;
   red_flags: string[];
   nurse_decision: string | null;
   status: string;
@@ -53,7 +55,7 @@ export default function NurseDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("patient_submissions")
-      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, red_flags, nurse_decision, status, created_at")
+      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, acuity_score, red_flags, nurse_decision, status, created_at")
       .eq("status", "waiting")
       .order("created_at", { ascending: false });
     if (error) {
@@ -118,7 +120,9 @@ export default function NurseDashboard() {
 
   const sortedSubmissions = [...submissions].sort((a, b) => {
     const order: Record<string, number> = { high: 0, moderate: 1, low: 2 };
-    return (order[a.ai_triage_level || "low"] ?? 2) - (order[b.ai_triage_level || "low"] ?? 2);
+    const levelDiff = (order[a.ai_triage_level || "low"] ?? 2) - (order[b.ai_triage_level || "low"] ?? 2);
+    if (levelDiff !== 0) return levelDiff;
+    return (b.acuity_score ?? 0) - (a.acuity_score ?? 0);
   });
 
   return (
@@ -203,11 +207,12 @@ export default function NurseDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Patient</TableHead>
-                    <TableHead className="font-semibold text-xs uppercase tracking-wider">AI Flag</TableHead>
-                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Red Flags</TableHead>
-                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Waiting</TableHead>
-                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Pain</TableHead>
+                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Patient</TableHead>
+                     <TableHead className="font-semibold text-xs uppercase tracking-wider">AI Flag</TableHead>
+                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Acuity</TableHead>
+                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Red Flags</TableHead>
+                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Waiting</TableHead>
+                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Pain</TableHead>
                     <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Decision</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -231,6 +236,31 @@ export default function NurseDashboard() {
                           <TriageBadge level={sub.ai_triage_level as TriageLevel} />
                         ) : (
                           <span className="text-xs text-muted-foreground italic">Pending</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {sub.acuity_score != null ? (
+                          <div className="flex items-center gap-2">
+                            <div className="relative h-2 w-16 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className={cn(
+                                  "absolute inset-y-0 left-0 rounded-full transition-all",
+                                  sub.acuity_score >= 80 ? "bg-triage-high" :
+                                  sub.acuity_score >= 50 ? "bg-triage-moderate" : "bg-triage-low"
+                                )}
+                                style={{ width: `${sub.acuity_score}%` }}
+                              />
+                            </div>
+                            <span className={cn(
+                              "text-sm font-bold tabular-nums",
+                              sub.acuity_score >= 80 ? "text-triage-high" :
+                              sub.acuity_score >= 50 ? "text-triage-moderate" : "text-triage-low"
+                            )}>
+                              {sub.acuity_score}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">—</span>
                         )}
                       </TableCell>
                       <TableCell>
