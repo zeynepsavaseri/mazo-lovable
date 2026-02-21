@@ -33,6 +33,7 @@ export default function PatientIntake() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedHistory, setSelectedHistory] = useState<string[]>([]);
   const [medications, setMedications] = useState("");
+  const [customSymptom, setCustomSymptom] = useState("");
   const [wearableHR, setWearableHR] = useState("");
   const [wearableSleep, setWearableSleep] = useState("");
 
@@ -148,6 +149,47 @@ export default function PatientIntake() {
                     </button>
                   );
                 })}
+                {/* Custom symptoms added by user */}
+                {selectedSymptoms
+                  .filter((s) => !SYMPTOM_OPTIONS.includes(s))
+                  .map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => toggleItem(s, selectedSymptoms, setSelectedSymptoms)}
+                      className="rounded-full border border-primary bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors"
+                    >
+                      {s} ×
+                    </button>
+                  ))}
+              </div>
+              {/* Other symptom input */}
+              <div className="mt-3 flex gap-2">
+                <Input
+                  placeholder="Other symptom not listed above..."
+                  value={customSymptom}
+                  onChange={(e) => setCustomSymptom(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && customSymptom.trim()) {
+                      e.preventDefault();
+                      if (!selectedSymptoms.includes(customSymptom.trim())) {
+                        setSelectedSymptoms((prev) => [...prev, customSymptom.trim()]);
+                      }
+                      setCustomSymptom("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (customSymptom.trim() && !selectedSymptoms.includes(customSymptom.trim())) {
+                      setSelectedSymptoms((prev) => [...prev, customSymptom.trim()]);
+                      setCustomSymptom("");
+                    }
+                  }}
+                >
+                  Add
+                </Button>
               </div>
             </CardContent>
           </Card>
