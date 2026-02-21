@@ -38,6 +38,7 @@ export type Database = {
           previous_visit: boolean | null
           red_flags: string[] | null
           risk_signals: string[] | null
+          status: string
           symptom_onset: string | null
           symptoms: string[] | null
           wearable_afib_details: string | null
@@ -71,6 +72,7 @@ export type Database = {
           previous_visit?: boolean | null
           red_flags?: string[] | null
           risk_signals?: string[] | null
+          status?: string
           symptom_onset?: string | null
           symptoms?: string[] | null
           wearable_afib_details?: string | null
@@ -104,6 +106,7 @@ export type Database = {
           previous_visit?: boolean | null
           red_flags?: string[] | null
           risk_signals?: string[] | null
+          status?: string
           symptom_onset?: string | null
           symptoms?: string[] | null
           wearable_afib_details?: string | null
