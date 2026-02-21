@@ -200,6 +200,18 @@ const SYMPTOM_CATEGORIES: SymptomCategory[] = [
       { id: "vomit_diarrhea", label: "Diarrhea as well?", type: "radio", options: ["Yes", "No"] },
     ],
   },
+  {
+    name: "Pain",
+    aliases: ["ache", "soreness", "hurting", "pain", "sore", "general pain"],
+    involvesPain: true,
+    followUps: [
+      { id: "pain_score", label: "Pain intensity", type: "slider", min: 0, max: 10, step: 1, isPainScale: true },
+      { id: "pain_location", label: "Where is the pain?", type: "text" },
+      { id: "pain_type", label: "Type of pain", type: "radio", options: ["Sharp", "Dull / aching", "Burning", "Throbbing", "Cramping"] },
+      { id: "pain_onset", label: "When did it start?", type: "radio", options: ["Today", "1–3 days ago", "This week", "> 1 week"] },
+      { id: "pain_constant", label: "Is it constant or intermittent?", type: "radio", options: ["Constant", "Comes and goes"] },
+    ],
+  },
 ];
 
 /* ──────────────────────────────────────────────────── *
