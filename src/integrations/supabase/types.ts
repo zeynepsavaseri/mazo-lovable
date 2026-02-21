@@ -37,6 +37,7 @@ export type Database = {
           pain_score: number | null
           phone: string | null
           previous_visit: boolean | null
+          queue_order: number | null
           red_flags: string[] | null
           risk_signals: string[] | null
           status: string
@@ -72,6 +73,7 @@ export type Database = {
           pain_score?: number | null
           phone?: string | null
           previous_visit?: boolean | null
+          queue_order?: number | null
           red_flags?: string[] | null
           risk_signals?: string[] | null
           status?: string
@@ -107,6 +109,7 @@ export type Database = {
           pain_score?: number | null
           phone?: string | null
           previous_visit?: boolean | null
+          queue_order?: number | null
           red_flags?: string[] | null
           risk_signals?: string[] | null
           status?: string
