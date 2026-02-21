@@ -1,62 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/AppHeader";
-import { TriageBadge } from "@/components/TriageBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Clock, Users, Activity, Shield, RefreshCw } from "lucide-react";
+import { AlertTriangle, Clock, Users, Shield, RefreshCw, Activity } from "lucide-react";
 import { DuotoneIcon } from "@/components/DuotoneIcon";
-import type { TriageLevel } from "@/data/types";
-
-interface Submission {
-  id: string;
-  name: string;
-  date_of_birth: string | null;
-  gender: string | null;
-  chief_complaint: string;
-  pain_score: number;
-  ai_triage_level: string | null;
-  acuity_score: number | null;
-  red_flags: string[];
-  nurse_decision: string | null;
-  status: string;
-  created_at: string;
-}
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { SortablePatientRow, type Submission } from "@/components/SortablePatientRow";
 
 export default function NurseDashboard() {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [overrideTarget, setOverrideTarget] = useState<Submission | null>(null);
-  const [overrideLevel, setOverrideLevel] = useState<TriageLevel>("moderate");
 
   const fetchSubmissions = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("patient_submissions")
-      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, acuity_score, red_flags, nurse_decision, status, created_at")
+      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, red_flags, nurse_decision, status, created_at, queue_order")
       .eq("status", "waiting")
+      .order("queue_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Failed to load patient submissions");
@@ -69,14 +50,12 @@ export default function NurseDashboard() {
 
   useEffect(() => { fetchSubmissions(); }, []);
 
-  const getWaitMinutes = (createdAt: string) => {
-    return Math.round((Date.now() - new Date(createdAt).getTime()) / 60000);
-  };
+  const getWaitMinutes = (createdAt: string) =>
+    Math.round((Date.now() - new Date(createdAt).getTime()) / 60000);
 
   const getAge = (dob: string | null) => {
     if (!dob) return null;
-    const diff = Date.now() - new Date(dob).getTime();
-    return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+    return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
   };
 
   const highCount = submissions.filter((s) => s.ai_triage_level === "high").length;
@@ -85,6 +64,13 @@ export default function NurseDashboard() {
   const avgWait = submissions.length > 0
     ? Math.round(submissions.reduce((sum, s) => sum + getWaitMinutes(s.created_at), 0) / submissions.length)
     : 0;
+
+  const persistOrder = useCallback(async (newList: Submission[]) => {
+    const updates = newList.map((s, i) => ({ id: s.id, queue_order: i }));
+    for (const u of updates) {
+      await supabase.from("patient_submissions").update({ queue_order: u.queue_order }).eq("id", u.id);
+    }
+  }, []);
 
   const handleAccept = async (id: string) => {
     const { error } = await supabase
@@ -99,31 +85,53 @@ export default function NurseDashboard() {
     }
   };
 
-  const handleOverrideConfirm = async () => {
-    if (!overrideTarget) return;
-    const { error } = await supabase
-      .from("patient_submissions")
-      .update({
-        nurse_decision: "override",
-        ai_triage_level: overrideLevel,
-        status: "in_treatment",
-      })
-      .eq("id", overrideTarget.id);
-    if (error) {
-      toast.error("Failed to save override");
-    } else {
-      setSubmissions((prev) => prev.filter((s) => s.id !== overrideTarget.id));
-      toast.success(`Triage overridden to ${overrideLevel} — moved to treatment`);
-    }
-    setOverrideTarget(null);
+  const handleMoveUp = (id: string) => {
+    setSubmissions((prev) => {
+      const idx = prev.findIndex((s) => s.id === id);
+      if (idx <= 0) return prev;
+      const next = arrayMove(prev, idx, idx - 1);
+      persistOrder(next);
+      return next;
+    });
   };
 
-  const sortedSubmissions = [...submissions].sort((a, b) => {
-    const order: Record<string, number> = { high: 0, moderate: 1, low: 2 };
-    const levelDiff = (order[a.ai_triage_level || "low"] ?? 2) - (order[b.ai_triage_level || "low"] ?? 2);
-    if (levelDiff !== 0) return levelDiff;
-    return (b.acuity_score ?? 0) - (a.acuity_score ?? 0);
-  });
+  const handleMoveDown = (id: string) => {
+    setSubmissions((prev) => {
+      const idx = prev.findIndex((s) => s.id === id);
+      if (idx < 0 || idx >= prev.length - 1) return prev;
+      const next = arrayMove(prev, idx, idx + 1);
+      persistOrder(next);
+      return next;
+    });
+  };
+
+  const handleSetOrder = (id: string, newPos: number) => {
+    setSubmissions((prev) => {
+      const idx = prev.findIndex((s) => s.id === id);
+      if (idx < 0) return prev;
+      const targetIdx = Math.max(0, Math.min(newPos - 1, prev.length - 1));
+      const next = arrayMove(prev, idx, targetIdx);
+      persistOrder(next);
+      return next;
+    });
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setSubmissions((prev) => {
+      const oldIdx = prev.findIndex((s) => s.id === active.id);
+      const newIdx = prev.findIndex((s) => s.id === over.id);
+      const next = arrayMove(prev, oldIdx, newIdx);
+      persistOrder(next);
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,7 +140,7 @@ export default function NurseDashboard() {
         <div className="flex items-end justify-between">
           <div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">Review AI-structured patient summaries and manage the queue.</p>
           </div>
           <Button variant="outline" size="sm" className="gap-2 text-xs font-medium" onClick={fetchSubmissions}>
             <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -196,6 +204,7 @@ export default function NurseDashboard() {
                 <DuotoneIcon icon={Activity} className="h-3.5 w-3.5 text-primary" />
               </div>
               Patient Queue
+              <span className="ml-auto text-xs font-normal text-muted-foreground">Drag rows, use arrows, or click position numbers to reorder</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -204,136 +213,43 @@ export default function NurseDashboard() {
             ) : submissions.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground text-sm">No patient submissions yet.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Patient</TableHead>
-                     <TableHead className="font-semibold text-xs uppercase tracking-wider">AI Flag</TableHead>
-                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Acuity</TableHead>
-                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Red Flags</TableHead>
-                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Waiting</TableHead>
-                     <TableHead className="font-semibold text-xs uppercase tracking-wider">Pain</TableHead>
-                    <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Decision</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedSubmissions.map((sub) => (
-                    <TableRow
-                      key={sub.id}
-                      className="cursor-pointer transition-colors duration-150 hover:bg-muted/40"
-                      onClick={() => navigate(`/patient/${sub.id}`)}
-                    >
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-foreground">{sub.name}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {getAge(sub.date_of_birth) ? `${getAge(sub.date_of_birth)}y` : ""} {sub.gender || ""}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {sub.ai_triage_level ? (
-                          <TriageBadge level={sub.ai_triage_level as TriageLevel} />
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">Pending</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {sub.acuity_score != null ? (
-                          <div className="flex items-center gap-2">
-                            <div className="relative h-2 w-16 rounded-full bg-muted overflow-hidden">
-                              <div
-                                className={cn(
-                                  "absolute inset-y-0 left-0 rounded-full transition-all",
-                                  sub.acuity_score >= 80 ? "bg-triage-high" :
-                                  sub.acuity_score >= 50 ? "bg-triage-moderate" : "bg-triage-low"
-                                )}
-                                style={{ width: `${sub.acuity_score}%` }}
-                              />
-                            </div>
-                            <span className={cn(
-                              "text-sm font-bold tabular-nums",
-                              sub.acuity_score >= 80 ? "text-triage-high" :
-                              sub.acuity_score >= 50 ? "text-triage-moderate" : "text-triage-low"
-                            )}>
-                              {sub.acuity_score}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {sub.red_flags && sub.red_flags.length > 0 ? (
-                            sub.red_flags.slice(0, 2).map((f) => (
-                              <span key={f} className="inline-block rounded-md bg-triage-high-bg px-2 py-0.5 text-xs font-medium text-triage-high ring-1 ring-triage-high/10">
-                                {f}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                          {sub.red_flags && sub.red_flags.length > 2 && (
-                            <span className="text-xs text-muted-foreground">+{sub.red_flags.length - 2}</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-semibold tabular-nums">{getWaitMinutes(sub.created_at)} min</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-semibold tabular-nums">{sub.pain_score}/10</span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleAccept(sub.id)}>
-                            Patient in Care
-                          </Button>
-                          <Button size="sm" variant="secondary" className="h-8 text-xs" onClick={() => {
-                            setOverrideTarget(sub);
-                            setOverrideLevel((sub.ai_triage_level as TriageLevel) || "moderate");
-                          }}>
-                            Override
-                          </Button>
-                        </div>
-                      </TableCell>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider w-16">#</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider">Patient</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider">AI Flag</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider">Red Flags</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider">Waiting</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider">Pain</TableHead>
+                      <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <SortableContext items={submissions.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                    <TableBody>
+                      {submissions.map((sub, idx) => (
+                        <SortablePatientRow
+                          key={sub.id}
+                          sub={sub}
+                          index={idx}
+                          total={submissions.length}
+                          onAccept={handleAccept}
+                          onMoveUp={handleMoveUp}
+                          onMoveDown={handleMoveDown}
+                          onSetOrder={handleSetOrder}
+                          onNavigate={(id) => navigate(`/patient/${id}`)}
+                          getWaitMinutes={getWaitMinutes}
+                          getAge={getAge}
+                        />
+                      ))}
+                    </TableBody>
+                  </SortableContext>
+                </Table>
+              </DndContext>
             )}
           </CardContent>
         </Card>
-
-        {/* Override Dialog */}
-        <Dialog open={!!overrideTarget} onOpenChange={(open) => !open && setOverrideTarget(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Override Triage Level</DialogTitle>
-              <DialogDescription>
-                Select the correct triage level for <strong>{overrideTarget?.name}</strong>.
-                Current AI assessment: <strong>{overrideTarget?.ai_triage_level || "none"}</strong>.
-              </DialogDescription>
-            </DialogHeader>
-            <RadioGroup value={overrideLevel} onValueChange={(v) => setOverrideLevel(v as TriageLevel)} className="space-y-3 py-2">
-              {(["high", "moderate", "low"] as TriageLevel[]).map((level) => (
-                <label
-                  key={level}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted has-[button[data-state=checked]]:border-primary has-[button[data-state=checked]]:bg-accent"
-                >
-                  <RadioGroupItem value={level} />
-                  <TriageBadge level={level} />
-                  <span className="text-sm font-medium capitalize">{level} Priority</span>
-                </label>
-              ))}
-            </RadioGroup>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOverrideTarget(null)}>Cancel</Button>
-              <Button onClick={handleOverrideConfirm}>Confirm Override</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </main>
     </div>
   );
