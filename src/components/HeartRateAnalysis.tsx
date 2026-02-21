@@ -49,6 +49,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        await videoRef.current.play();
       }
       setCameraActive(true);
     } catch {
@@ -66,8 +67,12 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     const canvas = canvasRef.current;
     if (!video || !canvas) return null;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) return null;
+
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.drawImage(video, 0, 0);
@@ -76,6 +81,13 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
   }, []);
 
   const startAnalysis = useCallback(async () => {
+    // Ensure video is actually playing with valid dimensions
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      toast.error("Camera not ready. Please wait a moment and try again.");
+      return;
+    }
+
     setIsRecording(true);
     setCountdown(5);
     setResult(null);
@@ -94,7 +106,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     const imageBase64 = captureFrame();
     if (!imageBase64) {
       setIsAnalyzing(false);
-      toast.error("Failed to capture frame");
+      toast.error("Failed to capture frame. Please try again.");
       return;
     }
 
