@@ -32,6 +32,7 @@ export default function PatientIntake() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [consentGiven, setConsentGiven] = useState(false);
   const [gender, setGender] = useState("");
   const [ethnicity, setEthnicity] = useState("");
   const [complaint, setComplaint] = useState("");
@@ -104,6 +105,10 @@ export default function PatientIntake() {
   const handleSubmit = () => {
     if (!complaint.trim()) {
       toast.error("Please describe your chief complaint");
+      return;
+    }
+    if (!consentGiven) {
+      toast.error("Please agree to share your information before submitting");
       return;
     }
     toast.success("Your information has been submitted. A nurse will review it shortly.");
@@ -520,7 +525,23 @@ export default function PatientIntake() {
             </CardContent>
           </Card>
 
-          <Button onClick={handleSubmit} size="lg" className="w-full gap-2">
+          {/* Data Sharing Consent */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <label className="flex cursor-pointer items-start gap-3">
+                <Checkbox
+                  checked={consentGiven}
+                  onCheckedChange={(checked) => setConsentGiven(checked === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm text-muted-foreground leading-relaxed">
+                  I agree to share my personal and medical information with the treating clinicians for the purpose of my care. I understand that this information will be kept <strong className="text-foreground">strictly confidential</strong> and will not be disclosed to unauthorized individuals.
+                </span>
+              </label>
+            </CardContent>
+          </Card>
+
+          <Button onClick={handleSubmit} size="lg" className="w-full gap-2" disabled={!consentGiven}>
             <Send className="h-4 w-4" />
             Submit Check-In
           </Button>
