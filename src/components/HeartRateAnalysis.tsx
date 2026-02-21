@@ -25,6 +25,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
   const streamRef = useRef<MediaStream | null>(null);
 
   const [cameraActive, setCameraActive] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -36,31 +37,46 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setCameraActive(false);
+    setVideoReady(false);
   }, []);
 
-  const startCamera = useCallback(async () => {
+  // Called directly from button click (user gesture)
+  const startCamera = async () => {
     setError(null);
     setResult(null);
-    stopStream();
+    setVideoReady(false);
+    // Stop any existing stream
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 640 }, height: { ideal: 480 } },
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
       setCameraActive(true);
+      // The video element will be rendered after setCameraActive(true),
+      // and we'll attach the stream in onLoadedMetadata via a ref callback
+      requestAnimationFrame(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      });
     } catch {
       setError("Camera access denied. Please allow camera permissions.");
       toast.error("Camera access denied");
     }
-  }, [facingMode, stopStream]);
+  };
+
+  const handleVideoReady = () => {
+    setVideoReady(true);
+  };
 
   useEffect(() => {
-    return () => stopStream();
-  }, [stopStream]);
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
   const captureFrame = useCallback((): string | null => {
     const video = videoRef.current;
@@ -81,10 +97,8 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
   }, []);
 
   const startAnalysis = useCallback(async () => {
-    // Ensure video is actually playing with valid dimensions
-    const video = videoRef.current;
-    if (!video || !video.videoWidth || !video.videoHeight) {
-      toast.error("Camera not ready. Please wait a moment and try again.");
+    if (!videoReady) {
+      toast.error("Camera not ready yet. Please wait for the preview to appear.");
       return;
     }
 
@@ -92,7 +106,6 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     setCountdown(5);
     setResult(null);
 
-    // Countdown for 5 seconds to let user position
     for (let i = 5; i > 0; i--) {
       setCountdown(i);
       await new Promise((r) => setTimeout(r, 1000));
@@ -102,7 +115,6 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     setIsAnalyzing(true);
     setCountdown(0);
 
-    // Capture a frame
     const imageBase64 = captureFrame();
     if (!imageBase64) {
       setIsAnalyzing(false);
@@ -127,15 +139,26 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [captureFrame, onResult]);
+  }, [captureFrame, onResult, videoReady]);
 
-  const handleFlip = () => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+  const handleFlip = async () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newMode);
+    setVideoReady(false);
+    // Restart stream with new facing mode directly (user gesture)
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newMode, width: { ideal: 640 }, height: { ideal: 480 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch {
+      setError("Failed to switch camera.");
+    }
   };
-
-  useEffect(() => {
-    if (cameraActive) startCamera();
-  }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const confidenceColor = {
     low: "text-triage-high",
@@ -178,6 +201,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
                   autoPlay
                   playsInline
                   muted
+                  onLoadedMetadata={handleVideoReady}
                   className="w-full h-full object-cover"
                 />
               )}
