@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, Clock, Users, Activity, Shield, RefreshCw } from "lucide-react";
+import { DuotoneIcon } from "@/components/DuotoneIcon";
 import type { TriageLevel } from "@/data/types";
 
 interface Submission {
@@ -109,7 +110,7 @@ export default function NurseDashboard() {
           <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-high-bg ring-1 ring-triage-high/10">
-                <AlertTriangle className="h-5 w-5 text-triage-high" strokeWidth={1.75} />
+                <DuotoneIcon icon={AlertTriangle} className="h-5 w-5 text-triage-high" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">High Priority</p>
@@ -120,7 +121,7 @@ export default function NurseDashboard() {
           <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-moderate-bg ring-1 ring-triage-moderate/10">
-                <Shield className="h-5 w-5 text-triage-moderate" strokeWidth={1.75} />
+                <DuotoneIcon icon={Shield} className="h-5 w-5 text-triage-moderate" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Moderate</p>
@@ -131,7 +132,7 @@ export default function NurseDashboard() {
           <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10">
-                <Clock className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                <DuotoneIcon icon={Clock} className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Avg. Wait</p>
@@ -142,7 +143,7 @@ export default function NurseDashboard() {
           <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10">
-                <Users className="h-5 w-5 text-primary" strokeWidth={1.75} />
+                <DuotoneIcon icon={Users} className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Pending</p>
@@ -157,7 +158,7 @@ export default function NurseDashboard() {
           <CardHeader className="pb-4 border-b border-border/50">
             <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                <Activity className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
+                <DuotoneIcon icon={Activity} className="h-3.5 w-3.5 text-primary" />
               </div>
               Patient Queue
             </CardTitle>
