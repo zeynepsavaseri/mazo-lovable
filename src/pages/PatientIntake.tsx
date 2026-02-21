@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,14 +17,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CameraModal } from "@/components/CameraModal";
+import { SmartSymptomAssessment, type SymptomAssessmentData } from "@/components/SmartSymptomAssessment";
 import { HeartRateAnalysis } from "@/components/HeartRateAnalysis";
 
-const SYMPTOM_OPTIONS = [
-  "Chest pain", "Shortness of breath", "Fever", "Headache", "Nausea",
-  "Vomiting", "Dizziness", "Abdominal pain", "Back pain", "Cough",
-  "Sore throat", "Body aches", "Fatigue", "Swelling", "Numbness",
-  "Blurred vision", "Rash", "Difficulty walking",
-];
+// Symptom options now handled by SmartSymptomAssessment
 
 const HISTORY_OPTIONS = [
   "Heart disease", "Stroke", "Kidney disease", "Asthma/COPD", "Seizures",
@@ -50,9 +45,9 @@ export default function PatientIntake() {
   const [onset, setOnset] = useState("");
   const [painScore, setPainScore] = useState([3]);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [symptomAssessment, setSymptomAssessment] = useState<SymptomAssessmentData | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<string[]>([]);
   const [medications, setMedications] = useState("");
-  const [customSymptom, setCustomSymptom] = useState("");
   const [customHistory, setCustomHistory] = useState("");
   const [wearableHR, setWearableHR] = useState("");
   const [wearableSleep, setWearableSleep] = useState("");
@@ -123,8 +118,8 @@ export default function PatientIntake() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!complaint.trim()) {
-      toast.error("Please describe your chief complaint");
+    if (!symptomAssessment?.primarySymptom && !complaint.trim()) {
+      toast.error("Please tell us what brought you in today");
       return;
     }
     if (!consentGiven) {
@@ -144,10 +139,10 @@ export default function PatientIntake() {
         phone: phone || null,
         email: email || null,
         address: address || null,
-        chief_complaint: complaint,
+        chief_complaint: symptomAssessment?.primarySymptom || complaint,
         symptom_onset: onset || null,
-        pain_score: painScore[0],
-        symptoms: selectedSymptoms,
+        pain_score: symptomAssessment?.painScore ?? painScore[0],
+        symptoms: symptomAssessment?.selectedSymptoms || selectedSymptoms,
         medical_history: selectedHistory,
         medications: medications || null,
         wearable_heart_rate: wearableHR ? parseFloat(wearableHR) : null,
@@ -398,210 +393,61 @@ export default function PatientIntake() {
             </CardContent>
           </Card>
 
-          {/* Chief Complaint */}
+          {/* Smart Symptom Assessment */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Stethoscope className="h-5 w-5 text-primary" />
-                Chief Complaint
+                What Brought You In?
               </CardTitle>
-              <CardDescription>What brings you to the ER today? Type, or attach a photo / voice / video.</CardDescription>
+              <CardDescription>Start typing your main symptom — we'll ask the right follow-up questions.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                placeholder="Describe your main concern in your own words..."
-                value={complaint}
-                onChange={(e) => setComplaint(e.target.value)}
-                className="min-h-[100px] resize-none"
+            <CardContent className="space-y-4">
+              <SmartSymptomAssessment
+                onChange={(data) => {
+                  setSymptomAssessment(data);
+                  setComplaint(data.primarySymptom || "");
+                  setSelectedSymptoms(data.selectedSymptoms);
+                  setPainScore([data.painScore]);
+                }}
               />
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => setCameraMode("photo")}
-                >
-                  <Camera className="h-4 w-4" />
-                  Take Photo
-                </Button>
-                {!isRecording ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={startVoiceRecording}
-                  >
-                    <Mic className="h-4 w-4" />
-                    Record Voice
+
+              {/* Media attachments */}
+              <div className="border-t border-border/50 pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Attach photo, voice, or video</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setCameraMode("photo")}>
+                    <Camera className="h-4 w-4" /> Photo
                   </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="gap-1.5 animate-pulse"
-                    onClick={stopVoiceRecording}
-                  >
-                    <Mic className="h-4 w-4" />
-                    Stop Recording
+                  {!isRecording ? (
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={startVoiceRecording}>
+                      <Mic className="h-4 w-4" /> Voice
+                    </Button>
+                  ) : (
+                    <Button type="button" variant="destructive" size="sm" className="gap-1.5 animate-pulse" onClick={stopVoiceRecording}>
+                      <Mic className="h-4 w-4" /> Stop
+                    </Button>
+                  )}
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setCameraMode("video")}>
+                    <Video className="h-4 w-4" /> Video
                   </Button>
+                </div>
+                {attachments.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {attachments.map((att, i) => (
+                      <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-2 text-sm">
+                        <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="truncate text-primary underline underline-offset-2 hover:text-primary/80" onClick={(e) => e.stopPropagation()}>
+                          {att.name}
+                        </a>
+                        <Badge variant="secondary" className="text-xs shrink-0">{att.type}</Badge>
+                        <button onClick={() => removeAttachment(i)} className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-destructive transition-colors">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => setCameraMode("video")}
-                >
-                  <Video className="h-4 w-4" />
-                  Record Video
-                </Button>
-              </div>
-              {attachments.length > 0 && (
-                <div className="space-y-2">
-                  {attachments.map((att, i) => (
-                    <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-2 text-sm">
-                      <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <a
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate text-primary underline underline-offset-2 hover:text-primary/80"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {att.name}
-                      </a>
-                      <Badge variant="secondary" className="text-xs shrink-0">{att.type}</Badge>
-                      <button
-                        onClick={() => removeAttachment(i)}
-                        className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Onset & Pain */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5 text-primary" />
-                  Symptom Onset
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  placeholder="e.g., 2 hours ago, yesterday morning..."
-                  value={onset}
-                  onChange={(e) => setOnset(e.target.value)}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <AlertCircle className="h-5 w-5 text-primary" />
-                  Pain Score
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-center mb-1">
-                  <span className={`text-2xl font-bold ${painColor}`}>{painScore[0]}</span>
-                </div>
-                <Slider
-                  value={painScore}
-                  onValueChange={setPainScore}
-                  max={10}
-                  min={0}
-                  step={1}
-                />
-                <div className="flex items-center justify-between">
-                  <div className="text-center">
-                    <span className="text-xs text-muted-foreground">0</span>
-                    <p className="text-xs text-muted-foreground">No pain</p>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-xs text-muted-foreground">10</span>
-                    <p className="text-xs text-muted-foreground">Worst</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Symptoms */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Key Symptoms</CardTitle>
-              <CardDescription>Select all that apply</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {SYMPTOM_OPTIONS.map((s) => {
-                  const selected = selectedSymptoms.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => toggleItem(s, selectedSymptoms, setSelectedSymptoms)}
-                      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                        selected
-                          ? "border-primary bg-accent text-accent-foreground"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
-                {/* Custom symptoms added by user */}
-                {selectedSymptoms
-                  .filter((s) => !SYMPTOM_OPTIONS.includes(s))
-                  .map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => toggleItem(s, selectedSymptoms, setSelectedSymptoms)}
-                      className="rounded-full border border-primary bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors"
-                    >
-                      {s} ×
-                    </button>
-                  ))}
-              </div>
-              {/* Other symptom input */}
-              <div className="mt-3 flex gap-2">
-                <Input
-                  placeholder="Other symptom not listed above..."
-                  value={customSymptom}
-                  onChange={(e) => setCustomSymptom(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && customSymptom.trim()) {
-                      e.preventDefault();
-                      if (!selectedSymptoms.includes(customSymptom.trim())) {
-                        setSelectedSymptoms((prev) => [...prev, customSymptom.trim()]);
-                      }
-                      setCustomSymptom("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    if (customSymptom.trim() && !selectedSymptoms.includes(customSymptom.trim())) {
-                      setSelectedSymptoms((prev) => [...prev, customSymptom.trim()]);
-                      setCustomSymptom("");
-                    }
-                  }}
-                >
-                  Add
-                </Button>
               </div>
             </CardContent>
           </Card>
