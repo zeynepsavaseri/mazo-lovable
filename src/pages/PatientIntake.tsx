@@ -30,6 +30,7 @@ const HISTORY_OPTIONS = [
 
 export default function PatientIntake() {
   const navigate = useNavigate();
+  const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [ethnicity, setEthnicity] = useState("");
@@ -130,7 +131,16 @@ export default function PatientIntake() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label className="text-sm">Full Name</Label>
+                  <Input
+                    placeholder="e.g., John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
                 <div>
                   <Label className="text-sm">Age</Label>
                   <Input
