@@ -621,50 +621,6 @@ export default function PatientIntake() {
                     <span className="text-sm">{h}</span>
                   </label>
                 ))}
-                {/* Custom history items */}
-                {selectedHistory
-                  .filter((h) => !HISTORY_OPTIONS.includes(h))
-                  .map((h) => (
-                    <label
-                      key={h}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-primary bg-accent p-3 transition-colors"
-                    >
-                      <Checkbox
-                        checked
-                        onCheckedChange={() => toggleItem(h, selectedHistory, setSelectedHistory)}
-                      />
-                      <span className="text-sm">{h}</span>
-                    </label>
-                  ))}
-              </div>
-              {/* Other condition input */}
-              <div className="mt-3 flex gap-2">
-                <Input
-                  placeholder="Other condition not listed above..."
-                  value={customHistory}
-                  onChange={(e) => setCustomHistory(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && customHistory.trim()) {
-                      e.preventDefault();
-                      if (!selectedHistory.includes(customHistory.trim())) {
-                        setSelectedHistory((prev) => [...prev, customHistory.trim()]);
-                      }
-                      setCustomHistory("");
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    if (customHistory.trim() && !selectedHistory.includes(customHistory.trim())) {
-                      setSelectedHistory((prev) => [...prev, customHistory.trim()]);
-                      setCustomHistory("");
-                    }
-                  }}
-                >
-                  Add
-                </Button>
               </div>
             </CardContent>
           </Card>
