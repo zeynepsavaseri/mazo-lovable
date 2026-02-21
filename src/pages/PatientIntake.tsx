@@ -30,9 +30,7 @@ const SYMPTOM_OPTIONS = [
 ];
 
 const HISTORY_OPTIONS = [
-  "Hypertension", "Diabetes", "Heart disease", "Asthma/COPD",
-  "Cancer", "Stroke", "Kidney disease", "Liver disease",
-  "Seizures", "Mental health condition", "Autoimmune disorder",
+  "Heart disease", "Stroke", "Kidney disease", "Asthma/COPD", "Seizures",
 ];
 
 export default function PatientIntake() {
