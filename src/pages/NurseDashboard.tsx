@@ -105,48 +105,48 @@ export default function NurseDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="card-elevated">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="card-elevated group">
             <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-triage-high-bg">
-                <AlertTriangle className="h-4.5 w-4.5 text-triage-high" />
+              <div className="icon-container-md bg-triage-high-bg group-hover:bg-triage-high/15">
+                <AlertTriangle className="h-[18px] w-[18px] text-triage-high" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">High Priority</p>
-                <p className="text-xl font-bold text-foreground">{highCount}</p>
+                <p className="text-xl font-bold tracking-tight text-foreground">{highCount}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated">
+          <Card className="card-elevated group">
             <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-triage-moderate-bg">
-                <Shield className="h-4.5 w-4.5 text-triage-moderate" />
+              <div className="icon-container-md bg-triage-moderate-bg group-hover:bg-triage-moderate/15">
+                <Shield className="h-[18px] w-[18px] text-triage-moderate" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Moderate</p>
-                <p className="text-xl font-bold text-foreground">{moderateCount}</p>
+                <p className="text-xl font-bold tracking-tight text-foreground">{moderateCount}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated">
+          <Card className="card-elevated group">
             <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                <Clock className="h-4.5 w-4.5 text-primary" />
+              <div className="icon-container-md bg-accent group-hover:bg-primary/10">
+                <Clock className="h-[18px] w-[18px] text-primary" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Avg. Wait</p>
-                <p className="text-xl font-bold text-foreground">{avgWait} min</p>
+                <p className="text-xl font-bold tracking-tight text-foreground">{avgWait} min</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated">
+          <Card className="card-elevated group">
             <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                <Users className="h-4.5 w-4.5 text-primary" />
+              <div className="icon-container-md bg-accent group-hover:bg-primary/10">
+                <Users className="h-[18px] w-[18px] text-primary" />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Pending Review</p>
-                <p className="text-xl font-bold text-foreground">{pendingCount}</p>
+                <p className="text-xl font-bold tracking-tight text-foreground">{pendingCount}</p>
               </div>
             </CardContent>
           </Card>
