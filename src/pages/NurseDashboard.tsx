@@ -92,71 +92,71 @@ export default function NurseDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <main className="container py-8 space-y-6 animate-slide-in">
-        <div className="flex items-center justify-between">
+      <main className="container py-8 animate-slide-in">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">Nurse Triage Dashboard</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
+            <h1 className="font-display text-3xl font-bold text-foreground">Nurse Triage Dashboard</h1>
+            <p className="mt-1.5 text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={fetchSubmissions}>
-            <RefreshCw className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={fetchSubmissions}>
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="card-elevated">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-triage-high-bg">
-                <AlertTriangle className="h-4.5 w-4.5 text-triage-high" />
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-triage-high-bg">
+                <AlertTriangle className="h-6 w-6 text-triage-high" />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">High Priority</p>
-                <p className="text-xl font-bold text-foreground">{highCount}</p>
+                <p className="text-sm text-muted-foreground">High Priority</p>
+                <p className="text-2xl font-bold text-foreground">{highCount}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-triage-moderate-bg">
-                <Shield className="h-4.5 w-4.5 text-triage-moderate" />
+          <Card>
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-triage-moderate-bg">
+                <Shield className="h-6 w-6 text-triage-moderate" />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Moderate</p>
-                <p className="text-xl font-bold text-foreground">{moderateCount}</p>
+                <p className="text-sm text-muted-foreground">Moderate</p>
+                <p className="text-2xl font-bold text-foreground">{moderateCount}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                <Clock className="h-4.5 w-4.5 text-primary" />
+          <Card>
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent">
+                <Clock className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Avg. Wait</p>
-                <p className="text-xl font-bold text-foreground">{avgWait} min</p>
+                <p className="text-sm text-muted-foreground">Avg. Wait</p>
+                <p className="text-2xl font-bold text-foreground">{avgWait} min</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                <Users className="h-4.5 w-4.5 text-primary" />
+          <Card>
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent">
+                <Users className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Pending Review</p>
-                <p className="text-xl font-bold text-foreground">{pendingCount}</p>
+                <p className="text-sm text-muted-foreground">Pending Review</p>
+                <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Patient Table */}
-        <Card className="card-elevated overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Activity className="h-4 w-4 text-primary" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
               Patient Queue
             </CardTitle>
           </CardHeader>

@@ -190,9 +190,9 @@ export default function PatientIntake() {
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="container max-w-3xl py-8 animate-slide-in">
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">Patient Check-In</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className="mb-8">
+          <h1 className="font-display text-3xl font-bold text-foreground">Patient Check-In</h1>
+          <p className="mt-1.5 text-muted-foreground">
             Please provide your symptoms and medical information to help us prioritize your care.
           </p>
         </div>
