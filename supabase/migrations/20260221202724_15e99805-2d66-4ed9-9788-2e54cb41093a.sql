@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_submissions ADD COLUMN acuity_score integer DEFAULT NULL;

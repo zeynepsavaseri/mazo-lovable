@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       patient_submissions: {
         Row: {
+          acuity_score: number | null
           address: string | null
           ai_summary: string | null
           ai_triage_level: string | null
@@ -50,6 +51,7 @@ export type Database = {
           weight: number | null
         }
         Insert: {
+          acuity_score?: number | null
           address?: string | null
           ai_summary?: string | null
           ai_triage_level?: string | null
@@ -84,6 +86,7 @@ export type Database = {
           weight?: number | null
         }
         Update: {
+          acuity_score?: number | null
           address?: string | null
           ai_summary?: string | null
           ai_triage_level?: string | null
