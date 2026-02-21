@@ -31,6 +31,10 @@ interface FullSubmission {
   medications: string | null;
   wearable_heart_rate: number | null;
   wearable_sleep: number | null;
+  wearable_spo2: number | null;
+  wearable_hr_trend: number[] | null;
+  wearable_afib_detected: boolean | null;
+  wearable_afib_details: string | null;
   previous_visit: boolean;
   ai_triage_level: string | null;
   ai_summary: string | null;
@@ -254,8 +258,8 @@ export default function PatientDetail() {
             </Card>
           )}
 
-          {/* Wearable Data */}
-          {(patient.wearable_heart_rate || patient.wearable_sleep) && (
+        {/* Wearable Data */}
+          {(patient.wearable_heart_rate || patient.wearable_sleep || patient.wearable_spo2 || patient.wearable_afib_detected !== null) && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -263,21 +267,69 @@ export default function PatientDetail() {
                   Wearable Data
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {patient.wearable_heart_rate && (
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {patient.wearable_heart_rate != null && (
                     <div className="rounded-xl border border-border bg-card p-4 text-center">
-                      <p className="text-sm text-muted-foreground">Heart Rate</p>
-                      <p className="mt-1 text-xl font-bold text-foreground">{patient.wearable_heart_rate} bpm</p>
+                      <p className="text-xs text-muted-foreground">Heart Rate</p>
+                      <p className="mt-1 text-xl font-bold text-foreground">{patient.wearable_heart_rate} <span className="text-sm font-normal text-muted-foreground">bpm</span></p>
                     </div>
                   )}
-                  {patient.wearable_sleep && (
+                  {patient.wearable_sleep != null && (
                     <div className="rounded-xl border border-border bg-card p-4 text-center">
-                      <p className="text-sm text-muted-foreground">Sleep</p>
-                      <p className="mt-1 text-xl font-bold text-foreground">{patient.wearable_sleep} hrs</p>
+                      <p className="text-xs text-muted-foreground">Sleep</p>
+                      <p className="mt-1 text-xl font-bold text-foreground">{patient.wearable_sleep} <span className="text-sm font-normal text-muted-foreground">hrs</span></p>
+                    </div>
+                  )}
+                  {patient.wearable_spo2 != null && (
+                    <div className="rounded-xl border border-border bg-card p-4 text-center">
+                      <p className="text-xs text-muted-foreground">SpO₂</p>
+                      <p className="mt-1 text-xl font-bold text-foreground">{patient.wearable_spo2}<span className="text-sm font-normal text-muted-foreground">%</span></p>
+                    </div>
+                  )}
+                  {patient.wearable_afib_detected !== null && (
+                    <div className={`rounded-xl border p-4 text-center ${patient.wearable_afib_detected ? "border-destructive/30 bg-destructive/10" : "border-border bg-card"}`}>
+                      <p className="text-xs text-muted-foreground">AFib</p>
+                      <p className={`mt-1 text-sm font-bold ${patient.wearable_afib_detected ? "text-destructive" : "text-triage-low"}`}>
+                        {patient.wearable_afib_detected ? "⚠ Detected" : "✓ Normal"}
+                      </p>
                     </div>
                   )}
                 </div>
+
+                {/* HR Trend Chart */}
+                {patient.wearable_hr_trend && Array.isArray(patient.wearable_hr_trend) && patient.wearable_hr_trend.length > 0 && (
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <p className="text-xs text-muted-foreground mb-2 font-medium">Heart Rate Trend (24h)</p>
+                    <div className="flex items-end gap-px h-16">
+                      {(patient.wearable_hr_trend as number[]).map((val: number, i: number) => {
+                        const min = Math.min(...(patient.wearable_hr_trend as number[]));
+                        const max = Math.max(...(patient.wearable_hr_trend as number[]));
+                        const height = max === min ? 50 : ((val - min) / (max - min)) * 100;
+                        return (
+                          <div
+                            key={i}
+                            className="flex-1 rounded-t-sm bg-primary/60"
+                            style={{ height: `${Math.max(height, 8)}%` }}
+                            title={`${val} bpm`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-[10px] text-muted-foreground">24h ago</span>
+                      <span className="text-[10px] text-muted-foreground">Now</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* AFib Details */}
+                {patient.wearable_afib_detected && patient.wearable_afib_details && (
+                  <div className="flex items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3">
+                    <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                    <p className="text-sm text-destructive">{patient.wearable_afib_details}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

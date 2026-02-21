@@ -40,8 +40,12 @@ export type Database = {
           risk_signals: string[] | null
           symptom_onset: string | null
           symptoms: string[] | null
+          wearable_afib_details: string | null
+          wearable_afib_detected: boolean | null
           wearable_heart_rate: number | null
+          wearable_hr_trend: Json | null
           wearable_sleep: number | null
+          wearable_spo2: number | null
           weight: number | null
         }
         Insert: {
@@ -69,8 +73,12 @@ export type Database = {
           risk_signals?: string[] | null
           symptom_onset?: string | null
           symptoms?: string[] | null
+          wearable_afib_details?: string | null
+          wearable_afib_detected?: boolean | null
           wearable_heart_rate?: number | null
+          wearable_hr_trend?: Json | null
           wearable_sleep?: number | null
+          wearable_spo2?: number | null
           weight?: number | null
         }
         Update: {
@@ -98,8 +106,12 @@ export type Database = {
           risk_signals?: string[] | null
           symptom_onset?: string | null
           symptoms?: string[] | null
+          wearable_afib_details?: string | null
+          wearable_afib_detected?: boolean | null
           wearable_heart_rate?: number | null
+          wearable_hr_trend?: Json | null
           wearable_sleep?: number | null
+          wearable_spo2?: number | null
           weight?: number | null
         }
         Relationships: []
