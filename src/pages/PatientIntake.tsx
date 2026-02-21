@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip, MapPin, Phone, Weight, ShieldAlert, Building2, Loader2 } from "lucide-react";
+import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip, MapPin, Phone, Weight, ShieldAlert, Building2, Loader2, Bluetooth, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -63,6 +63,9 @@ export default function PatientIntake() {
   const [attachments, setAttachments] = useState<{ type: string; name: string; url: string }[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraMode, setCameraMode] = useState<"photo" | "video" | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncedData, setSyncedData] = useState<{ hr: number; sleep: number } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -715,34 +718,73 @@ export default function PatientIntake() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Watch className="h-5 w-5 text-primary" />
-                Wearable Device Data
+                Wearable Device
                 <Badge variant="secondary" className="ml-1 text-xs">Optional</Badge>
               </CardTitle>
-              <CardDescription>If you use a smartwatch or fitness tracker</CardDescription>
+              <CardDescription>Connect your smartwatch or fitness tracker to auto-sync health data</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label className="text-sm">Resting Heart Rate (bpm)</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 72"
-                    value={wearableHR}
-                    onChange={(e) => setWearableHR(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm">Last Night's Sleep (hours)</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 6.5"
-                    value={wearableSleep}
-                    onChange={(e) => setWearableSleep(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Select value={selectedDevice} onValueChange={setSelectedDevice}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select your device" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apple-watch">Apple Watch</SelectItem>
+                    <SelectItem value="fitbit">Fitbit</SelectItem>
+                    <SelectItem value="garmin">Garmin</SelectItem>
+                    <SelectItem value="samsung-galaxy">Samsung Galaxy Watch</SelectItem>
+                    <SelectItem value="whoop">WHOOP</SelectItem>
+                    <SelectItem value="oura">Oura Ring</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!selectedDevice || isSyncing}
+                  className="gap-2 shrink-0"
+                  onClick={async () => {
+                    setIsSyncing(true);
+                    // Simulate syncing from the selected device
+                    await new Promise((r) => setTimeout(r, 2000));
+                    const hr = Math.floor(Math.random() * 33) + 62; // 62–94
+                    const sleep = +(Math.random() * 4 + 5).toFixed(1); // 5.0–9.0
+                    setSyncedData({ hr, sleep });
+                    setWearableHR(String(hr));
+                    setWearableSleep(String(sleep));
+                    setIsSyncing(false);
+                    toast.success(`Synced data from ${selectedDevice.replace("-", " ")}`);
+                  }}
+                >
+                  {isSyncing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Bluetooth className="h-4 w-4" />
+                  )}
+                  {isSyncing ? "Syncing..." : "Sync"}
+                </Button>
               </div>
+
+              {syncedData && (
+                <div className="rounded-xl border border-primary/20 bg-accent/40 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
+                      Data synced from {selectedDevice.replace(/-/g, " ")}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-card p-3 text-center border border-border/50">
+                      <p className="text-xs text-muted-foreground mb-0.5">Resting Heart Rate</p>
+                      <p className="text-xl font-bold text-foreground">{syncedData.hr} <span className="text-sm font-normal text-muted-foreground">bpm</span></p>
+                    </div>
+                    <div className="rounded-lg bg-card p-3 text-center border border-border/50">
+                      <p className="text-xs text-muted-foreground mb-0.5">Last Night's Sleep</p>
+                      <p className="text-xl font-bold text-foreground">{syncedData.sleep} <span className="text-sm font-normal text-muted-foreground">hrs</span></p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
