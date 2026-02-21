@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Heart, Clock, Stethoscope, Pill, Watch, Send, AlertCircle, User, Camera, Mic, Video, X, Paperclip } from "lucide-react";
 import { toast } from "sonner";
+import { CameraModal } from "@/components/CameraModal";
 
 const SYMPTOM_OPTIONS = [
   "Chest pain", "Shortness of breath", "Fever", "Headache", "Nausea",
@@ -43,23 +44,13 @@ export default function PatientIntake() {
   const [wearableSleep, setWearableSleep] = useState("");
   const [attachments, setAttachments] = useState<{ type: string; name: string; url: string }[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [cameraMode, setCameraMode] = useState<"photo" | "video" | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  const handleCapture = (accept: string, type: string) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = accept;
-    input.setAttribute("capture", type === "photo" ? "environment" : "user");
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        setAttachments((prev) => [...prev, { type, name: file.name, url }]);
-        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} captured`);
-      }
-    };
-    input.click();
+  const handleCameraCapture = (file: { type: string; name: string; url: string }) => {
+    setAttachments((prev) => [...prev, file]);
+    toast.success(`${file.type.charAt(0).toUpperCase() + file.type.slice(1)} captured`);
   };
 
   const startVoiceRecording = async () => {
@@ -208,7 +199,7 @@ export default function PatientIntake() {
                   variant="outline"
                   size="sm"
                   className="gap-1.5"
-                  onClick={() => handleCapture("image/*", "photo")}
+                  onClick={() => setCameraMode("photo")}
                 >
                   <Camera className="h-4 w-4" />
                   Take Photo
@@ -241,7 +232,7 @@ export default function PatientIntake() {
                   variant="outline"
                   size="sm"
                   className="gap-1.5"
-                  onClick={() => handleCapture("video/*", "video")}
+                  onClick={() => setCameraMode("video")}
                 >
                   <Video className="h-4 w-4" />
                   Record Video
@@ -516,6 +507,13 @@ export default function PatientIntake() {
             Submit Check-In
           </Button>
         </div>
+
+        <CameraModal
+          open={cameraMode !== null}
+          onClose={() => setCameraMode(null)}
+          mode={cameraMode ?? "photo"}
+          onCapture={handleCameraCapture}
+        />
       </main>
     </div>
   );
