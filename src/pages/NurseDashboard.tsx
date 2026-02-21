@@ -93,7 +93,7 @@ export default function NurseDashboard() {
       toast.error("Failed to save decision");
     } else {
       setSubmissions((prev) => prev.filter((s) => s.id !== id));
-      toast.success("Patient accepted — moved to treatment");
+      toast.success("Patient is now in care — removed from queue");
     }
   };
 
@@ -258,7 +258,7 @@ export default function NurseDashboard() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleAccept(sub.id)}>
-                            Accept
+                            Patient in Care
                           </Button>
                           <Button size="sm" variant="secondary" className="h-8 text-xs" onClick={() => {
                             setOverrideTarget(sub);
