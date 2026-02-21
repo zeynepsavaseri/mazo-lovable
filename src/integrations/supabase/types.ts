@@ -14,7 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      patient_submissions: {
+        Row: {
+          address: string | null
+          ai_summary: string | null
+          ai_triage_level: string | null
+          allergies: string | null
+          attachments: Json | null
+          chief_complaint: string
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          ethnicity: string | null
+          gender: string | null
+          id: string
+          medical_history: string[] | null
+          medications: string | null
+          missing_questions: string[] | null
+          name: string
+          nurse_decision: string | null
+          pain_score: number | null
+          phone: string | null
+          previous_visit: boolean | null
+          red_flags: string[] | null
+          risk_signals: string[] | null
+          symptom_onset: string | null
+          symptoms: string[] | null
+          wearable_heart_rate: number | null
+          wearable_sleep: number | null
+          weight: number | null
+        }
+        Insert: {
+          address?: string | null
+          ai_summary?: string | null
+          ai_triage_level?: string | null
+          allergies?: string | null
+          attachments?: Json | null
+          chief_complaint: string
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          id?: string
+          medical_history?: string[] | null
+          medications?: string | null
+          missing_questions?: string[] | null
+          name: string
+          nurse_decision?: string | null
+          pain_score?: number | null
+          phone?: string | null
+          previous_visit?: boolean | null
+          red_flags?: string[] | null
+          risk_signals?: string[] | null
+          symptom_onset?: string | null
+          symptoms?: string[] | null
+          wearable_heart_rate?: number | null
+          wearable_sleep?: number | null
+          weight?: number | null
+        }
+        Update: {
+          address?: string | null
+          ai_summary?: string | null
+          ai_triage_level?: string | null
+          allergies?: string | null
+          attachments?: Json | null
+          chief_complaint?: string
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          id?: string
+          medical_history?: string[] | null
+          medications?: string | null
+          missing_questions?: string[] | null
+          name?: string
+          nurse_decision?: string | null
+          pain_score?: number | null
+          phone?: string | null
+          previous_visit?: boolean | null
+          red_flags?: string[] | null
+          risk_signals?: string[] | null
+          symptom_onset?: string | null
+          symptoms?: string[] | null
+          wearable_heart_rate?: number | null
+          wearable_sleep?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

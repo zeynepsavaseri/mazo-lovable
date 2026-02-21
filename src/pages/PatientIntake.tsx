@@ -117,7 +117,9 @@ export default function PatientIntake() {
 
   const painColor = painScore[0] <= 3 ? "text-triage-low" : painScore[0] <= 6 ? "text-triage-moderate" : "text-triage-high";
 
-  const handleSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (!complaint.trim()) {
       toast.error("Please describe your chief complaint");
       return;
@@ -126,8 +128,62 @@ export default function PatientIntake() {
       toast.error("Please agree to share your information before submitting");
       return;
     }
-    toast.success("Your information has been submitted. A nurse will review it shortly.");
-    setTimeout(() => navigate("/"), 1500);
+
+    setIsSubmitting(true);
+    try {
+      const submissionData = {
+        name: name || "Anonymous",
+        date_of_birth: dateOfBirth?.toISOString().split("T")[0] || null,
+        gender: gender || null,
+        ethnicity: ethnicity || null,
+        weight: weight ? parseFloat(weight) : null,
+        allergies: allergies || null,
+        phone: phone || null,
+        email: email || null,
+        address: address || null,
+        chief_complaint: complaint,
+        symptom_onset: onset || null,
+        pain_score: painScore[0],
+        symptoms: selectedSymptoms,
+        medical_history: selectedHistory,
+        medications: medications || null,
+        wearable_heart_rate: wearableHR ? parseFloat(wearableHR) : null,
+        wearable_sleep: wearableSleep ? parseFloat(wearableSleep) : null,
+        previous_visit: previousVisit === "yes",
+        attachments: attachments.map((a) => ({ type: a.type, name: a.name })),
+      };
+
+      // Get AI triage assessment
+      let triageData: any = {};
+      try {
+        const { data, error } = await supabase.functions.invoke("triage-patient", {
+          body: submissionData,
+        });
+        if (!error && data) triageData = data;
+      } catch {
+        console.warn("AI triage unavailable, saving without assessment");
+      }
+
+      // Save to database
+      const { error: dbError } = await supabase.from("patient_submissions").insert({
+        ...submissionData,
+        ai_triage_level: triageData.ai_triage_level || null,
+        ai_summary: triageData.ai_summary || null,
+        red_flags: triageData.red_flags || [],
+        risk_signals: triageData.risk_signals || [],
+        missing_questions: triageData.missing_questions || [],
+      });
+
+      if (dbError) throw dbError;
+
+      toast.success("Your information has been submitted. A nurse will review it shortly.");
+      setTimeout(() => navigate("/"), 1500);
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error("Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -706,9 +762,9 @@ export default function PatientIntake() {
             </CardContent>
           </Card>
 
-          <Button onClick={handleSubmit} size="lg" className="w-full gap-2" disabled={!consentGiven}>
-            <Send className="h-4 w-4" />
-            Submit Check-In
+          <Button onClick={handleSubmit} size="lg" className="w-full gap-2" disabled={!consentGiven || isSubmitting}>
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {isSubmitting ? "Submitting & Analyzing..." : "Submit Check-In"}
           </Button>
         </div>
 

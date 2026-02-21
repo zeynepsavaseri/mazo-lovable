@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import { TriageBadge } from "@/components/TriageBadge";
@@ -12,43 +12,96 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockPatients } from "@/data/mockPatients";
-import { Patient } from "@/data/types";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Clock, Users, Activity, Shield } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Users, Activity, Shield, RefreshCw } from "lucide-react";
+import type { TriageLevel } from "@/data/types";
+
+interface Submission {
+  id: string;
+  name: string;
+  date_of_birth: string | null;
+  gender: string | null;
+  chief_complaint: string;
+  pain_score: number;
+  ai_triage_level: string | null;
+  red_flags: string[];
+  nurse_decision: string | null;
+  created_at: string;
+}
 
 export default function NurseDashboard() {
   const navigate = useNavigate();
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const highCount = patients.filter((p) => p.aiTriageLevel === "high").length;
-  const moderateCount = patients.filter((p) => p.aiTriageLevel === "moderate").length;
-  const pendingCount = patients.filter((p) => p.nurseDecision === null).length;
-  const avgWait = Math.round(patients.reduce((s, p) => s + p.timeWaiting, 0) / patients.length);
-
-  const handleDecision = (id: string, decision: "accept" | "override") => {
-    setPatients((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, nurseDecision: decision } : p))
-    );
-    toast.success(
-      decision === "accept"
-        ? "AI triage accepted"
-        : "Triage overridden – please assign new level"
-    );
+  const fetchSubmissions = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("patient_submissions")
+      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, red_flags, nurse_decision, created_at")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Failed to load patient submissions");
+      console.error(error);
+    } else {
+      setSubmissions(data || []);
+    }
+    setLoading(false);
   };
 
-  const sortedPatients = [...patients].sort((a, b) => {
-    const order = { high: 0, moderate: 1, low: 2 };
-    return order[a.aiTriageLevel] - order[b.aiTriageLevel];
+  useEffect(() => { fetchSubmissions(); }, []);
+
+  const getWaitMinutes = (createdAt: string) => {
+    return Math.round((Date.now() - new Date(createdAt).getTime()) / 60000);
+  };
+
+  const getAge = (dob: string | null) => {
+    if (!dob) return null;
+    const diff = Date.now() - new Date(dob).getTime();
+    return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+  };
+
+  const highCount = submissions.filter((s) => s.ai_triage_level === "high").length;
+  const moderateCount = submissions.filter((s) => s.ai_triage_level === "moderate").length;
+  const pendingCount = submissions.filter((s) => !s.nurse_decision).length;
+  const avgWait = submissions.length > 0
+    ? Math.round(submissions.reduce((sum, s) => sum + getWaitMinutes(s.created_at), 0) / submissions.length)
+    : 0;
+
+  const handleDecision = async (id: string, decision: "accept" | "override") => {
+    const { error } = await supabase
+      .from("patient_submissions")
+      .update({ nurse_decision: decision })
+      .eq("id", id);
+    if (error) {
+      toast.error("Failed to save decision");
+    } else {
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, nurse_decision: decision } : s))
+      );
+      toast.success(decision === "accept" ? "AI triage accepted" : "Triage overridden");
+    }
+  };
+
+  const sortedSubmissions = [...submissions].sort((a, b) => {
+    const order: Record<string, number> = { high: 0, moderate: 1, low: 2 };
+    return (order[a.ai_triage_level || "low"] ?? 2) - (order[b.ai_triage_level || "low"] ?? 2);
   });
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="container py-8 animate-slide-in">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-foreground">Nurse Triage Dashboard</h1>
-          <p className="mt-1.5 text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-foreground">Nurse Triage Dashboard</h1>
+            <p className="mt-1.5 text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
+          </div>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={fetchSubmissions}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
         </div>
 
         {/* Stats */}
@@ -108,89 +161,88 @@ export default function NurseDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>AI Flag</TableHead>
-                  <TableHead>Red Flags</TableHead>
-                  <TableHead>Time Waiting</TableHead>
-                  <TableHead>Pain</TableHead>
-                  <TableHead className="text-right">Nurse Decision</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedPatients.map((patient) => (
-                  <TableRow
-                    key={patient.id}
-                    className="cursor-pointer transition-colors hover:bg-muted/50"
-                    onClick={() => navigate(`/patient/${patient.id}`)}
-                  >
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-foreground">{patient.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {patient.age}y {patient.gender}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <TriageBadge level={patient.aiTriageLevel} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {patient.redFlags.length > 0 ? (
-                          patient.redFlags.slice(0, 2).map((f) => (
-                            <span
-                              key={f}
-                              className="inline-block rounded-md bg-triage-high-bg px-2 py-0.5 text-xs font-medium text-triage-high"
-                            >
-                              {f}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-sm text-muted-foreground">None</span>
-                        )}
-                        {patient.redFlags.length > 2 && (
-                          <span className="text-xs text-muted-foreground">+{patient.redFlags.length - 2}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium">{patient.timeWaiting} min</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium">{patient.painScore}/10</span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {patient.nurseDecision ? (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                          <CheckCircle2 className="h-4 w-4" />
-                          {patient.nurseDecision === "accept" ? "Accepted" : "Overridden"}
-                        </span>
-                      ) : (
-                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDecision(patient.id, "accept")}
-                          >
-                            Accept
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => handleDecision(patient.id, "override")}
-                          >
-                            Override
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
+            {loading ? (
+              <p className="py-8 text-center text-muted-foreground">Loading submissions...</p>
+            ) : submissions.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">No patient submissions yet.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Patient</TableHead>
+                    <TableHead>AI Flag</TableHead>
+                    <TableHead>Red Flags</TableHead>
+                    <TableHead>Time Waiting</TableHead>
+                    <TableHead>Pain</TableHead>
+                    <TableHead className="text-right">Nurse Decision</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {sortedSubmissions.map((sub) => (
+                    <TableRow
+                      key={sub.id}
+                      className="cursor-pointer transition-colors hover:bg-muted/50"
+                      onClick={() => navigate(`/patient/${sub.id}`)}
+                    >
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-foreground">{sub.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {getAge(sub.date_of_birth) ? `${getAge(sub.date_of_birth)}y` : ""} {sub.gender || ""}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {sub.ai_triage_level ? (
+                          <TriageBadge level={sub.ai_triage_level as TriageLevel} />
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Pending</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {sub.red_flags && sub.red_flags.length > 0 ? (
+                            sub.red_flags.slice(0, 2).map((f) => (
+                              <span key={f} className="inline-block rounded-md bg-triage-high-bg px-2 py-0.5 text-xs font-medium text-triage-high">
+                                {f}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-muted-foreground">None</span>
+                          )}
+                          {sub.red_flags && sub.red_flags.length > 2 && (
+                            <span className="text-xs text-muted-foreground">+{sub.red_flags.length - 2}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">{getWaitMinutes(sub.created_at)} min</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">{sub.pain_score}/10</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {sub.nurse_decision ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                            <CheckCircle2 className="h-4 w-4" />
+                            {sub.nurse_decision === "accept" ? "Accepted" : "Overridden"}
+                          </span>
+                        ) : (
+                          <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Button size="sm" variant="outline" onClick={() => handleDecision(sub.id, "accept")}>
+                              Accept
+                            </Button>
+                            <Button size="sm" variant="secondary" onClick={() => handleDecision(sub.id, "override")}>
+                              Override
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </main>
