@@ -106,10 +106,10 @@ export default function NurseDashboard() {
 
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="card-elevated group overflow-hidden relative">
+          <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-high-bg ring-1 ring-triage-high/10 transition-all duration-200 group-hover:ring-triage-high/20 group-hover:scale-105">
-                <AlertTriangle className="h-5 w-5 text-triage-high" strokeWidth={2} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-high-bg ring-1 ring-triage-high/10">
+                <AlertTriangle className="h-5 w-5 text-triage-high" strokeWidth={1.75} />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">High Priority</p>
@@ -117,10 +117,10 @@ export default function NurseDashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated group overflow-hidden relative">
+          <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-moderate-bg ring-1 ring-triage-moderate/10 transition-all duration-200 group-hover:ring-triage-moderate/20 group-hover:scale-105">
-                <Shield className="h-5 w-5 text-triage-moderate" strokeWidth={2} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-moderate-bg ring-1 ring-triage-moderate/10">
+                <Shield className="h-5 w-5 text-triage-moderate" strokeWidth={1.75} />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Moderate</p>
@@ -128,10 +128,10 @@ export default function NurseDashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated group overflow-hidden relative">
+          <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10 transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105">
-                <Clock className="h-5 w-5 text-primary" strokeWidth={2} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10">
+                <Clock className="h-5 w-5 text-primary" strokeWidth={1.75} />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Avg. Wait</p>
@@ -139,10 +139,10 @@ export default function NurseDashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated group overflow-hidden relative">
+          <Card className="card-elevated overflow-hidden relative">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10 transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105">
-                <Users className="h-5 w-5 text-primary" strokeWidth={2} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10">
+                <Users className="h-5 w-5 text-primary" strokeWidth={1.75} />
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Pending</p>

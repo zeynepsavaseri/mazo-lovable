@@ -14,8 +14,8 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 border-b border-border/30 bg-card/60 backdrop-blur-2xl supports-[backdrop-filter]:bg-card/40">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl medical-gradient shadow-lg shadow-primary/25 transition-all duration-200 group-hover:shadow-xl group-hover:shadow-primary/30 group-hover:scale-105">
-            <Activity className="h-4.5 w-4.5 text-primary-foreground" strokeWidth={2.5} />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl medical-gradient shadow-lg shadow-primary/25">
+            <Activity className="h-4.5 w-4.5 text-primary-foreground" strokeWidth={1.75} />
           </div>
           <div className="flex flex-col">
             <span className="font-display text-lg font-bold tracking-tight text-foreground leading-tight">
