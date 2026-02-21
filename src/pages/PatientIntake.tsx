@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -42,22 +42,57 @@ export default function PatientIntake() {
   const [wearableHR, setWearableHR] = useState("");
   const [wearableSleep, setWearableSleep] = useState("");
   const [attachments, setAttachments] = useState<{ type: string; name: string; url: string }[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
-  const handleFileUpload = (accept: string, type: string) => {
+  const handleCapture = (accept: string, type: string) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = accept;
-    if (type === "photo") input.setAttribute("capture", "environment");
-    if (type === "video") input.setAttribute("capture", "environment");
+    input.setAttribute("capture", type === "photo" ? "environment" : "user");
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         const url = URL.createObjectURL(file);
         setAttachments((prev) => [...prev, { type, name: file.name, url }]);
-        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} attached`);
+        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} captured`);
       }
     };
     input.click();
+  };
+
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        const timestamp = new Date().toLocaleTimeString();
+        setAttachments((prev) => [...prev, { type: "voice", name: `Recording ${timestamp}`, url }]);
+        toast.success("Voice recording saved");
+        stream.getTracks().forEach((t) => t.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.info("Recording... tap Stop when done");
+    } catch {
+      toast.error("Microphone access denied");
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
   };
 
   const removeAttachment = (index: number) => {
@@ -173,30 +208,43 @@ export default function PatientIntake() {
                   variant="outline"
                   size="sm"
                   className="gap-1.5"
-                  onClick={() => handleFileUpload("image/*", "photo")}
+                  onClick={() => handleCapture("image/*", "photo")}
                 >
                   <Camera className="h-4 w-4" />
-                  Photo
+                  Take Photo
                 </Button>
+                {!isRecording ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={startVoiceRecording}
+                  >
+                    <Mic className="h-4 w-4" />
+                    Record Voice
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="gap-1.5 animate-pulse"
+                    onClick={stopVoiceRecording}
+                  >
+                    <Mic className="h-4 w-4" />
+                    Stop Recording
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="gap-1.5"
-                  onClick={() => handleFileUpload("audio/*", "voice")}
-                >
-                  <Mic className="h-4 w-4" />
-                  Voice
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => handleFileUpload("video/*", "video")}
+                  onClick={() => handleCapture("video/*", "video")}
                 >
                   <Video className="h-4 w-4" />
-                  Video
+                  Record Video
                 </Button>
               </div>
               {attachments.length > 0 && (
