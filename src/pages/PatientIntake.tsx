@@ -311,10 +311,10 @@ export default function PatientIntake() {
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label className="text-sm">Phone Number</Label>
+                  <Label className="text-sm">Phone Number (with country code)</Label>
                   <Input
                     type="tel"
-                    placeholder="e.g., +1 (555) 123-4567"
+                    placeholder="e.g., +1 555-123-4567"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="mt-1.5"
