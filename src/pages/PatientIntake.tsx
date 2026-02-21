@@ -65,7 +65,11 @@ export default function PatientIntake() {
   const [cameraMode, setCameraMode] = useState<"photo" | "video" | null>(null);
   const [selectedDevice, setSelectedDevice] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncedData, setSyncedData] = useState<{ hr: number; sleep: number } | null>(null);
+  const [wearableSpo2, setWearableSpo2] = useState("");
+  const [wearableAfibDetected, setWearableAfibDetected] = useState<boolean | null>(null);
+  const [wearableAfibDetails, setWearableAfibDetails] = useState("");
+  const [wearableHrTrend, setWearableHrTrend] = useState<number[]>([]);
+  const [syncedData, setSyncedData] = useState<{ hr: number; sleep: number; spo2: number; hrTrend: number[]; afibDetected: boolean; afibDetails: string } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -152,6 +156,10 @@ export default function PatientIntake() {
         medications: medications || null,
         wearable_heart_rate: wearableHR ? parseFloat(wearableHR) : null,
         wearable_sleep: wearableSleep ? parseFloat(wearableSleep) : null,
+        wearable_spo2: wearableSpo2 ? parseFloat(wearableSpo2) : null,
+        wearable_hr_trend: wearableHrTrend.length > 0 ? wearableHrTrend : null,
+        wearable_afib_detected: wearableAfibDetected,
+        wearable_afib_details: wearableAfibDetails || null,
         previous_visit: previousVisit === "yes",
         attachments: attachments.map((a) => ({ type: a.type, name: a.name })),
       };
@@ -747,11 +755,19 @@ export default function PatientIntake() {
                     setIsSyncing(true);
                     // Simulate syncing from the selected device
                     await new Promise((r) => setTimeout(r, 2000));
-                    const hr = Math.floor(Math.random() * 33) + 62; // 62–94
-                    const sleep = +(Math.random() * 4 + 5).toFixed(1); // 5.0–9.0
-                    setSyncedData({ hr, sleep });
+                    const hr = Math.floor(Math.random() * 33) + 62;
+                    const sleep = +(Math.random() * 4 + 5).toFixed(1);
+                    const spo2 = Math.floor(Math.random() * 4) + 95; // 95–98
+                    const hrTrend = Array.from({ length: 24 }, () => Math.floor(Math.random() * 30) + 60);
+                    const afibDetected = Math.random() < 0.15; // 15% chance
+                    const afibDetails = afibDetected ? "Irregular rhythm detected during resting period. Recommend ECG follow-up." : "No irregular rhythms detected in the last 24 hours.";
+                    setSyncedData({ hr, sleep, spo2, hrTrend, afibDetected, afibDetails });
                     setWearableHR(String(hr));
                     setWearableSleep(String(sleep));
+                    setWearableSpo2(String(spo2));
+                    setWearableHrTrend(hrTrend);
+                    setWearableAfibDetected(afibDetected);
+                    setWearableAfibDetails(afibDetails);
                     setIsSyncing(false);
                     toast.success(`Synced data from ${selectedDevice.replace("-", " ")}`);
                   }}
@@ -782,7 +798,48 @@ export default function PatientIntake() {
                       <p className="text-xs text-muted-foreground mb-0.5">Last Night's Sleep</p>
                       <p className="text-xl font-bold text-foreground">{syncedData.sleep} <span className="text-sm font-normal text-muted-foreground">hrs</span></p>
                     </div>
+                    <div className="rounded-lg bg-card p-3 text-center border border-border/50">
+                      <p className="text-xs text-muted-foreground mb-0.5">SpO₂</p>
+                      <p className="text-xl font-bold text-foreground">{syncedData.spo2}<span className="text-sm font-normal text-muted-foreground">%</span></p>
+                    </div>
+                    <div className={cn("rounded-lg p-3 text-center border", syncedData.afibDetected ? "bg-destructive/10 border-destructive/30" : "bg-card border-border/50")}>
+                      <p className="text-xs text-muted-foreground mb-0.5">AFib Detection</p>
+                      <p className={cn("text-sm font-bold", syncedData.afibDetected ? "text-destructive" : "text-triage-low")}>
+                        {syncedData.afibDetected ? "⚠ Detected" : "✓ Normal"}
+                      </p>
+                    </div>
                   </div>
+                  {/* HR Trend mini sparkline */}
+                  {syncedData.hrTrend.length > 0 && (
+                    <div className="mt-3 rounded-lg bg-card p-3 border border-border/50">
+                      <p className="text-xs text-muted-foreground mb-2">Heart Rate Trend (24h)</p>
+                      <div className="flex items-end gap-px h-12">
+                        {syncedData.hrTrend.map((val, i) => {
+                          const min = Math.min(...syncedData.hrTrend);
+                          const max = Math.max(...syncedData.hrTrend);
+                          const height = max === min ? 50 : ((val - min) / (max - min)) * 100;
+                          return (
+                            <div
+                              key={i}
+                              className="flex-1 rounded-t-sm bg-primary/60 transition-all"
+                              style={{ height: `${Math.max(height, 8)}%` }}
+                              title={`${val} bpm`}
+                            />
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[10px] text-muted-foreground">24h ago</span>
+                        <span className="text-[10px] text-muted-foreground">Now</span>
+                      </div>
+                    </div>
+                  )}
+                  {syncedData.afibDetected && (
+                    <div className="mt-2 flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+                      <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                      <p className="text-xs text-destructive">{syncedData.afibDetails}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
