@@ -92,61 +92,61 @@ export default function NurseDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <main className="container py-8 space-y-6 animate-slide-in">
-        <div className="flex items-center justify-between">
+      <main className="container py-8 space-y-8 animate-slide-in">
+        <div className="flex items-end justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">Nurse Triage Dashboard</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">Review AI-structured patient summaries and assign triage levels.</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={fetchSubmissions}>
-            <RefreshCw className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="gap-2 text-xs font-medium" onClick={fetchSubmissions}>
+            <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />
             Refresh
           </Button>
         </div>
 
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="card-elevated group">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="icon-container-md bg-triage-high-bg group-hover:bg-triage-high/15">
-                <AlertTriangle className="h-[18px] w-[18px] text-triage-high" />
+          <Card className="card-elevated group overflow-hidden relative">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-high-bg ring-1 ring-triage-high/10 transition-all duration-200 group-hover:ring-triage-high/20 group-hover:scale-105">
+                <AlertTriangle className="h-5 w-5 text-triage-high" strokeWidth={2} />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">High Priority</p>
-                <p className="text-xl font-bold tracking-tight text-foreground">{highCount}</p>
+                <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">High Priority</p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">{highCount}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated group">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="icon-container-md bg-triage-moderate-bg group-hover:bg-triage-moderate/15">
-                <Shield className="h-[18px] w-[18px] text-triage-moderate" />
+          <Card className="card-elevated group overflow-hidden relative">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-triage-moderate-bg ring-1 ring-triage-moderate/10 transition-all duration-200 group-hover:ring-triage-moderate/20 group-hover:scale-105">
+                <Shield className="h-5 w-5 text-triage-moderate" strokeWidth={2} />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Moderate</p>
-                <p className="text-xl font-bold tracking-tight text-foreground">{moderateCount}</p>
+                <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Moderate</p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">{moderateCount}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated group">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="icon-container-md bg-accent group-hover:bg-primary/10">
-                <Clock className="h-[18px] w-[18px] text-primary" />
+          <Card className="card-elevated group overflow-hidden relative">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10 transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105">
+                <Clock className="h-5 w-5 text-primary" strokeWidth={2} />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Avg. Wait</p>
-                <p className="text-xl font-bold tracking-tight text-foreground">{avgWait} min</p>
+                <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Avg. Wait</p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">{avgWait} min</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated group">
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <div className="icon-container-md bg-accent group-hover:bg-primary/10">
-                <Users className="h-[18px] w-[18px] text-primary" />
+          <Card className="card-elevated group overflow-hidden relative">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent ring-1 ring-primary/10 transition-all duration-200 group-hover:ring-primary/20 group-hover:scale-105">
+                <Users className="h-5 w-5 text-primary" strokeWidth={2} />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Pending Review</p>
-                <p className="text-xl font-bold tracking-tight text-foreground">{pendingCount}</p>
+                <p className="text-xs font-medium text-muted-foreground tracking-wide uppercase">Pending</p>
+                <p className="text-2xl font-bold tracking-tight text-foreground">{pendingCount}</p>
               </div>
             </CardContent>
           </Card>
@@ -154,40 +154,42 @@ export default function NurseDashboard() {
 
         {/* Patient Table */}
         <Card className="card-elevated overflow-hidden">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold">
-              <Activity className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-4 border-b border-border/50">
+            <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                <Activity className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
+              </div>
               Patient Queue
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
-              <p className="py-8 text-center text-muted-foreground">Loading submissions...</p>
+              <p className="py-12 text-center text-muted-foreground text-sm">Loading submissions...</p>
             ) : submissions.length === 0 ? (
-              <p className="py-8 text-center text-muted-foreground">No patient submissions yet.</p>
+              <p className="py-12 text-center text-muted-foreground text-sm">No patient submissions yet.</p>
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>AI Flag</TableHead>
-                    <TableHead>Red Flags</TableHead>
-                    <TableHead>Time Waiting</TableHead>
-                    <TableHead>Pain</TableHead>
-                    <TableHead className="text-right">Nurse Decision</TableHead>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Patient</TableHead>
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">AI Flag</TableHead>
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Red Flags</TableHead>
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Waiting</TableHead>
+                    <TableHead className="font-semibold text-xs uppercase tracking-wider">Pain</TableHead>
+                    <TableHead className="text-right font-semibold text-xs uppercase tracking-wider">Decision</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedSubmissions.map((sub) => (
                     <TableRow
                       key={sub.id}
-                      className="cursor-pointer transition-colors hover:bg-muted/50"
+                      className="cursor-pointer transition-colors duration-150 hover:bg-muted/40"
                       onClick={() => navigate(`/patient/${sub.id}`)}
                     >
                       <TableCell>
                         <div>
-                          <p className="font-medium text-foreground">{sub.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="font-semibold text-foreground">{sub.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {getAge(sub.date_of_birth) ? `${getAge(sub.date_of_birth)}y` : ""} {sub.gender || ""}
                           </p>
                         </div>
@@ -196,19 +198,19 @@ export default function NurseDashboard() {
                         {sub.ai_triage_level ? (
                           <TriageBadge level={sub.ai_triage_level as TriageLevel} />
                         ) : (
-                          <span className="text-sm text-muted-foreground">Pending</span>
+                          <span className="text-xs text-muted-foreground italic">Pending</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {sub.red_flags && sub.red_flags.length > 0 ? (
                             sub.red_flags.slice(0, 2).map((f) => (
-                              <span key={f} className="inline-block rounded-md bg-triage-high-bg px-2 py-0.5 text-xs font-medium text-triage-high">
+                              <span key={f} className="inline-block rounded-md bg-triage-high-bg px-2 py-0.5 text-xs font-medium text-triage-high ring-1 ring-triage-high/10">
                                 {f}
                               </span>
                             ))
                           ) : (
-                            <span className="text-sm text-muted-foreground">None</span>
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                           {sub.red_flags && sub.red_flags.length > 2 && (
                             <span className="text-xs text-muted-foreground">+{sub.red_flags.length - 2}</span>
@@ -216,23 +218,23 @@ export default function NurseDashboard() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{getWaitMinutes(sub.created_at)} min</span>
+                        <span className="font-semibold tabular-nums">{getWaitMinutes(sub.created_at)} min</span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{sub.pain_score}/10</span>
+                        <span className="font-semibold tabular-nums">{sub.pain_score}/10</span>
                       </TableCell>
                       <TableCell className="text-right">
                         {sub.nurse_decision ? (
-                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                            <CheckCircle2 className="h-4 w-4" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary">
+                            <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.5} />
                             {sub.nurse_decision === "accept" ? "Accepted" : "Overridden"}
                           </span>
                         ) : (
                           <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Button size="sm" variant="outline" onClick={() => handleDecision(sub.id, "accept")}>
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleDecision(sub.id, "accept")}>
                               Accept
                             </Button>
-                            <Button size="sm" variant="secondary" onClick={() => handleDecision(sub.id, "override")}>
+                            <Button size="sm" variant="secondary" className="h-8 text-xs" onClick={() => handleDecision(sub.id, "override")}>
                               Override
                             </Button>
                           </div>
