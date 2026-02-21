@@ -32,13 +32,13 @@ export function TriageBadge({ level, className }: TriageBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium",
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase",
         c.bgClass,
         c.textClass,
         className
       )}
     >
-      <span className={cn("h-2 w-2 rounded-full", c.dotClass)} />
+      <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse-soft", c.dotClass)} />
       {c.label}
     </span>
   );
