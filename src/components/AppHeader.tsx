@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Activity, ClipboardList, Users } from "lucide-react";
+import { DuotoneIcon } from "@/components/DuotoneIcon";
 
 export function AppHeader() {
   const location = useLocation();
@@ -15,7 +16,7 @@ export function AppHeader() {
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="relative flex h-9 w-9 items-center justify-center rounded-xl medical-gradient shadow-lg shadow-primary/25">
-            <Activity className="h-4.5 w-4.5 text-primary-foreground" strokeWidth={1.75} />
+            <DuotoneIcon icon={Activity} className="h-4.5 w-4.5 text-primary-foreground" fillOpacity={0.3} />
           </div>
           <div className="flex flex-col">
             <span className="font-display text-lg font-bold tracking-tight text-foreground leading-tight">
@@ -42,7 +43,7 @@ export function AppHeader() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="h-4 w-4" strokeWidth={isActive ? 2.5 : 2} />
+                <DuotoneIcon icon={Icon} className="h-4 w-4" fillOpacity={isActive ? 0.2 : 0.1} />
                 {link.label}
               </Link>
             );
