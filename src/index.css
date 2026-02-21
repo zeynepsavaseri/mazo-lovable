@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,95 +7,95 @@
 @layer base {
   :root {
     --background: 210 20% 98%;
-    --foreground: 210 30% 10%;
+    --foreground: 215 28% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 30% 10%;
+    --card-foreground: 215 28% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 10%;
+    --popover-foreground: 215 28% 14%;
 
-    --primary: 174 62% 38%;
+    --primary: 174 58% 34%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 25% 95%;
-    --secondary-foreground: 210 30% 20%;
+    --secondary: 210 18% 94%;
+    --secondary-foreground: 215 20% 25%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 210 15% 50%;
+    --muted: 210 14% 95%;
+    --muted-foreground: 215 12% 48%;
 
-    --accent: 174 40% 92%;
-    --accent-foreground: 174 62% 25%;
+    --accent: 174 32% 93%;
+    --accent-foreground: 174 50% 22%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 68% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 174 62% 38%;
+    --border: 214 16% 91%;
+    --input: 214 16% 89%;
+    --ring: 174 58% 34%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     /* Custom medical tokens */
-    --triage-high: 0 72% 51%;
-    --triage-moderate: 38 92% 50%;
-    --triage-low: 142 71% 45%;
-    --triage-high-bg: 0 72% 96%;
-    --triage-moderate-bg: 38 92% 95%;
-    --triage-low-bg: 142 71% 95%;
+    --triage-high: 0 68% 48%;
+    --triage-moderate: 36 90% 48%;
+    --triage-low: 152 60% 40%;
+    --triage-high-bg: 0 60% 96%;
+    --triage-moderate-bg: 36 80% 95%;
+    --triage-low-bg: 152 50% 95%;
 
     --surface-raised: 0 0% 100%;
-    --surface-overlay: 210 20% 98%;
+    --surface-overlay: 210 16% 97%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 174 62% 38%;
+    --sidebar-primary: 174 58% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 174 40% 95%;
-    --sidebar-accent-foreground: 174 62% 25%;
-    --sidebar-border: 210 20% 90%;
-    --sidebar-ring: 174 62% 38%;
+    --sidebar-accent: 174 32% 95%;
+    --sidebar-accent-foreground: 174 50% 22%;
+    --sidebar-border: 214 16% 91%;
+    --sidebar-ring: 174 58% 34%;
   }
 
   .dark {
-    --background: 210 30% 8%;
-    --foreground: 210 20% 95%;
-    --card: 210 30% 12%;
-    --card-foreground: 210 20% 95%;
-    --popover: 210 30% 12%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 174 62% 45%;
+    --background: 215 28% 7%;
+    --foreground: 210 16% 93%;
+    --card: 215 25% 11%;
+    --card-foreground: 210 16% 93%;
+    --popover: 215 25% 11%;
+    --popover-foreground: 210 16% 93%;
+    --primary: 174 55% 42%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 25% 18%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 210 25% 18%;
-    --muted-foreground: 210 15% 60%;
-    --accent: 174 40% 18%;
-    --accent-foreground: 174 62% 65%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 210 25% 20%;
-    --input: 210 25% 20%;
-    --ring: 174 62% 45%;
+    --secondary: 215 20% 16%;
+    --secondary-foreground: 210 16% 88%;
+    --muted: 215 20% 16%;
+    --muted-foreground: 215 12% 55%;
+    --accent: 174 30% 16%;
+    --accent-foreground: 174 50% 62%;
+    --destructive: 0 60% 35%;
+    --destructive-foreground: 210 30% 96%;
+    --border: 215 20% 18%;
+    --input: 215 20% 18%;
+    --ring: 174 55% 42%;
 
-    --triage-high: 0 72% 55%;
-    --triage-moderate: 38 92% 55%;
-    --triage-low: 142 71% 50%;
-    --triage-high-bg: 0 72% 15%;
-    --triage-moderate-bg: 38 60% 15%;
-    --triage-low-bg: 142 50% 15%;
+    --triage-high: 0 68% 52%;
+    --triage-moderate: 36 85% 52%;
+    --triage-low: 152 55% 46%;
+    --triage-high-bg: 0 55% 14%;
+    --triage-moderate-bg: 36 50% 14%;
+    --triage-low-bg: 152 40% 14%;
 
-    --surface-raised: 210 30% 14%;
-    --surface-overlay: 210 30% 10%;
+    --surface-raised: 215 25% 13%;
+    --surface-overlay: 215 28% 9%;
 
-    --sidebar-background: 210 30% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 174 62% 45%;
+    --sidebar-background: 215 28% 9%;
+    --sidebar-foreground: 210 16% 88%;
+    --sidebar-primary: 174 55% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 174 40% 15%;
-    --sidebar-accent-foreground: 174 62% 65%;
-    --sidebar-border: 210 25% 20%;
-    --sidebar-ring: 174 62% 45%;
+    --sidebar-accent: 174 30% 14%;
+    --sidebar-accent-foreground: 174 50% 62%;
+    --sidebar-border: 215 20% 18%;
+    --sidebar-ring: 174 55% 42%;
   }
 }
 
@@ -105,20 +105,30 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01';
   }
 
   h1, h2, h3, h4 {
     font-family: 'DM Sans', sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
   .medical-gradient {
-    background: linear-gradient(135deg, hsl(174 62% 38%) 0%, hsl(190 60% 42%) 100%);
+    background: linear-gradient(145deg, hsl(174 58% 34%) 0%, hsl(190 50% 38%) 100%);
   }
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm;
+    @apply bg-card/90 backdrop-blur-md border border-border/60 shadow-sm;
+  }
+  .card-elevated {
+    @apply bg-card border border-border/70 shadow-[0_1px_3px_0_rgb(0_0_0/0.04),0_1px_2px_-1px_rgb(0_0_0/0.04)];
+  }
+  .card-elevated:hover {
+    @apply shadow-[0_4px_12px_-2px_rgb(0_0_0/0.06),0_2px_4px_-2px_rgb(0_0_0/0.04)];
   }
 }

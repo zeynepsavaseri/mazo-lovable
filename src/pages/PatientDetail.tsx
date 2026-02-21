@@ -106,23 +106,24 @@ export default function PatientDetail() {
       <main className="container max-w-4xl py-8 animate-slide-in">
         <Button
           variant="ghost"
-          className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
+          size="sm"
+          className="mb-5 gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           onClick={() => navigate("/")}
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back to Dashboard
         </Button>
 
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">{patient.name}</h1>
-            <p className="mt-1 text-muted-foreground">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{patient.name}</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {age ? `${age} years old` : ""}{age && patient.gender ? " · " : ""}{patient.gender || ""} · Waiting {getWaitMinutes(patient.created_at)} min
             </p>
           </div>
           {patient.ai_triage_level && (
-            <TriageBadge level={patient.ai_triage_level as TriageLevel} className="text-base" />
+            <TriageBadge level={patient.ai_triage_level as TriageLevel} className="text-sm" />
           )}
         </div>
 
