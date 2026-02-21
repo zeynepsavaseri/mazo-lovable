@@ -6,95 +6,95 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 28% 14%;
+    --background: 220 20% 97%;
+    --foreground: 220 25% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 28% 14%;
+    --card-foreground: 220 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 28% 14%;
+    --popover-foreground: 220 25% 10%;
 
-    --primary: 174 58% 34%;
+    --primary: 174 62% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 18% 94%;
-    --secondary-foreground: 215 20% 25%;
+    --secondary: 220 14% 93%;
+    --secondary-foreground: 220 18% 30%;
 
-    --muted: 210 14% 95%;
-    --muted-foreground: 215 12% 48%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 174 32% 93%;
+    --accent: 174 28% 93%;
     --accent-foreground: 174 50% 22%;
 
-    --destructive: 0 68% 48%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 16% 91%;
-    --input: 214 16% 89%;
-    --ring: 174 58% 34%;
+    --border: 220 13% 90%;
+    --input: 220 13% 87%;
+    --ring: 174 62% 32%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
     /* Custom medical tokens */
-    --triage-high: 0 68% 48%;
-    --triage-moderate: 36 90% 48%;
-    --triage-low: 152 60% 40%;
+    --triage-high: 0 72% 51%;
+    --triage-moderate: 38 92% 50%;
+    --triage-low: 152 56% 39%;
     --triage-high-bg: 0 60% 96%;
-    --triage-moderate-bg: 36 80% 95%;
-    --triage-low-bg: 152 50% 95%;
+    --triage-moderate-bg: 38 75% 95%;
+    --triage-low-bg: 152 45% 95%;
 
     --surface-raised: 0 0% 100%;
-    --surface-overlay: 210 16% 97%;
+    --surface-overlay: 220 14% 97%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 174 58% 34%;
+    --sidebar-primary: 174 62% 32%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 174 32% 95%;
+    --sidebar-accent: 174 28% 95%;
     --sidebar-accent-foreground: 174 50% 22%;
-    --sidebar-border: 214 16% 91%;
-    --sidebar-ring: 174 58% 34%;
+    --sidebar-border: 220 13% 90%;
+    --sidebar-ring: 174 62% 32%;
   }
 
   .dark {
-    --background: 215 28% 7%;
-    --foreground: 210 16% 93%;
-    --card: 215 25% 11%;
-    --card-foreground: 210 16% 93%;
-    --popover: 215 25% 11%;
-    --popover-foreground: 210 16% 93%;
+    --background: 220 25% 6%;
+    --foreground: 220 14% 93%;
+    --card: 220 22% 10%;
+    --card-foreground: 220 14% 93%;
+    --popover: 220 22% 10%;
+    --popover-foreground: 220 14% 93%;
     --primary: 174 55% 42%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 20% 16%;
-    --secondary-foreground: 210 16% 88%;
-    --muted: 215 20% 16%;
-    --muted-foreground: 215 12% 55%;
-    --accent: 174 30% 16%;
+    --secondary: 220 18% 15%;
+    --secondary-foreground: 220 14% 88%;
+    --muted: 220 18% 15%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 174 25% 15%;
     --accent-foreground: 174 50% 62%;
-    --destructive: 0 60% 35%;
-    --destructive-foreground: 210 30% 96%;
-    --border: 215 20% 18%;
-    --input: 215 20% 18%;
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 220 25% 96%;
+    --border: 220 18% 16%;
+    --input: 220 18% 16%;
     --ring: 174 55% 42%;
 
-    --triage-high: 0 68% 52%;
-    --triage-moderate: 36 85% 52%;
-    --triage-low: 152 55% 46%;
-    --triage-high-bg: 0 55% 14%;
-    --triage-moderate-bg: 36 50% 14%;
-    --triage-low-bg: 152 40% 14%;
+    --triage-high: 0 72% 55%;
+    --triage-moderate: 38 85% 55%;
+    --triage-low: 152 50% 48%;
+    --triage-high-bg: 0 50% 13%;
+    --triage-moderate-bg: 38 45% 13%;
+    --triage-low-bg: 152 35% 13%;
 
-    --surface-raised: 215 25% 13%;
-    --surface-overlay: 215 28% 9%;
+    --surface-raised: 220 22% 12%;
+    --surface-overlay: 220 25% 8%;
 
-    --sidebar-background: 215 28% 9%;
-    --sidebar-foreground: 210 16% 88%;
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 220 14% 88%;
     --sidebar-primary: 174 55% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 174 30% 14%;
+    --sidebar-accent: 174 25% 13%;
     --sidebar-accent-foreground: 174 50% 62%;
-    --sidebar-border: 215 20% 18%;
+    --sidebar-border: 220 18% 16%;
     --sidebar-ring: 174 55% 42%;
   }
 }
@@ -110,11 +110,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: 'cv11', 'ss01';
+    letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4 {
     font-family: 'DM Sans', sans-serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
   }
 }
 
