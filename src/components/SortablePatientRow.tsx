@@ -17,6 +17,7 @@ export interface Submission {
   chief_complaint: string;
   pain_score: number;
   ai_triage_level: string | null;
+  acuity_score: number | null;
   red_flags: string[];
   nurse_decision: string | null;
   status: string;
@@ -124,11 +125,21 @@ export function SortablePatientRow({
 
       {/* AI Flag */}
       <TableCell>
-        {sub.ai_triage_level ? (
-          <TriageBadge level={sub.ai_triage_level as TriageLevel} />
-        ) : (
-          <span className="text-xs text-muted-foreground italic">Pending</span>
-        )}
+        <div className="flex items-center gap-2">
+          {sub.ai_triage_level ? (
+            <TriageBadge level={sub.ai_triage_level as TriageLevel} />
+          ) : (
+            <span className="text-xs text-muted-foreground italic">Pending</span>
+          )}
+          {sub.acuity_score != null && (
+            <span className={cn(
+              "text-xs font-bold tabular-nums",
+              sub.acuity_score >= 70 ? "text-triage-high" : sub.acuity_score >= 40 ? "text-triage-moderate" : "text-triage-low"
+            )}>
+              {sub.acuity_score}
+            </span>
+          )}
+        </div>
       </TableCell>
 
       {/* Red Flags */}
