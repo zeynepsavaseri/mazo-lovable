@@ -14,12 +14,22 @@ serve(async (req) => {
   try {
     const submission = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
-    const prompt = `You are an emergency department AI triage system. Analyze this patient and provide triage assessment.
+    const prompt = `You are a clinical decision support tool that helps nurses prioritize patients. You do NOT diagnose. You identify patterns and flag risks.
 
-Patient: ${submission.name}, DOB: ${submission.date_of_birth || "unknown"}, Gender: ${submission.gender || "unknown"}, Weight: ${submission.weight || "unknown"}kg
+Rules:
+- Never use diagnostic language (no "heart attack", "stroke", "meningitis" etc.)
+- Use pattern language: "high-risk symptom cluster", "concerning vital sign pattern", "symptom combination requiring urgent evaluation"
+- Always explain WHY something was flagged and WHICH specific symptoms triggered it
+- Include a confidence level for the triage level
+
+Patient:
+Name: ${submission.name}
+DOB: ${submission.date_of_birth || "unknown"}
+Gender: ${submission.gender || "unknown"}
+Weight: ${submission.weight || "unknown"}kg
 Allergies: ${submission.allergies || "None reported"}
 Chief Complaint: ${submission.chief_complaint}
 Symptom Onset: ${submission.symptom_onset || "unknown"}
@@ -27,79 +37,45 @@ Pain Score: ${submission.pain_score}/10
 Symptoms: ${(submission.symptoms || []).join(", ") || "None listed"}
 Medical History: ${(submission.medical_history || []).join(", ") || "None listed"}
 Medications: ${submission.medications || "None listed"}
-Wearable Heart Rate: ${submission.wearable_heart_rate || "not provided"} bpm
+Heart Rate: ${submission.wearable_heart_rate || "not provided"} bpm
+SpO2: ${submission.wearable_spo2 || "not provided"}%
 
-Assess the triage level and provide clinical analysis.`;
+Return ONLY a valid JSON object with no markdown, no backticks, no explanation. Exactly this structure:
+{
+  "ai_triage_level": "high" | "moderate" | "low",
+  "ai_summary": "2-3 sentence clinical summary using pattern language only",
+  "red_flags": ["flag with which symptom triggered it"],
+  "risk_signals": ["risk factor and why it elevates concern"],
+  "missing_questions": ["critical question nurse should ask"],
+  "confidence_level": "high" | "moderate" | "low",
+  "triggered_by": ["specific symptom or vital that drove triage level"]
+}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "You are an ER triage AI. Provide accurate clinical triage assessments." },
-          { role: "user", content: prompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "triage_assessment",
-              description: "Provide triage assessment for the patient",
-              parameters: {
-                type: "object",
-                properties: {
-                  ai_triage_level: { type: "string", enum: ["high", "moderate", "low"], description: "Triage priority level" },
-                  acuity_score: { type: "integer", description: "Numeric acuity severity score from 1 (least severe) to 100 (most severe). Use the full range. Two high-priority patients should still differ in score based on clinical severity." },
-                  ai_summary: { type: "string", description: "Clinical summary in 2-3 sentences" },
-                  red_flags: { type: "array", items: { type: "string" }, description: "Critical red flags identified (short phrases)" },
-                  risk_signals: { type: "array", items: { type: "string" }, description: "Risk signals to monitor (short phrases)" },
-                  missing_questions: { type: "array", items: { type: "string" }, description: "Important follow-up questions the nurse should ask" },
-                },
-                required: ["ai_triage_level", "acuity_score", "ai_summary", "red_flags", "risk_signals", "missing_questions"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "triage_assessment" } },
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
+        }),
+      }
+    );
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const aiData = await response.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    let text = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    text = text.replace(/```json|```/g, "").trim();
+    const assessment = JSON.parse(text);
 
-    if (toolCall?.function?.arguments) {
-      const assessment = JSON.parse(toolCall.function.arguments);
-      return new Response(JSON.stringify(assessment), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    return new Response(JSON.stringify(assessment), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
-    return new Response(JSON.stringify({
-      ai_triage_level: "moderate",
-      ai_summary: "Unable to generate AI assessment. Manual triage required.",
-      red_flags: [],
-      risk_signals: [],
-      missing_questions: [],
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("Triage error:", error);
     return new Response(JSON.stringify({
@@ -108,6 +84,8 @@ Assess the triage level and provide clinical analysis.`;
       red_flags: [],
       risk_signals: [],
       missing_questions: [],
+      confidence_level: null,
+      triggered_by: [],
       error: error instanceof Error ? error.message : "Unknown error",
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
