@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Zap,
   X,
+  Mic,
+  MicOff,
 } from "lucide-react";
 
 /* ──────────────────────────────────────────────────── *
@@ -239,8 +241,40 @@ export function SmartSymptomAssessment({ onChange }: Props) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const startListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setQuery(transcript);
+      setShowSuggestions(true);
+    };
+
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognition.start();
+    setIsListening(true);
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  };
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -375,8 +409,21 @@ export function SmartSymptomAssessment({ onChange }: Props) {
                 }
               }
             }}
-            className="pl-10 h-12 text-base"
+            className="pl-10 pr-12 h-12 text-base"
           />
+          <button
+            type="button"
+            onClick={isListening ? stopListening : startListening}
+            className={cn(
+              "absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 transition-colors",
+              isListening
+                ? "bg-destructive text-destructive-foreground animate-pulse"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+            title={isListening ? "Stop listening" : "Speak your symptoms"}
+          >
+            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Autocomplete dropdown */}
