@@ -7,6 +7,8 @@ import { Heart, Video, RotateCcw, Square, Activity, AlertTriangle, CheckCircle2,
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
 interface QualityChecks {
   adequateLighting: boolean;
   minimalMotion: boolean;
@@ -134,11 +136,27 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
     }
 
     try {
+      if (!SUPABASE_URL?.trim()) {
+        throw new Error(
+          "Supabase is not configured. Set VITE_SUPABASE_URL (and VITE_SUPABASE_PUBLISHABLE_KEY) in your deployment environment."
+        );
+      }
+
       const { data, error: fnError } = await supabase.functions.invoke("analyze-heartrate", {
         body: { imageBase64 },
       });
 
-      if (fnError) throw fnError;
+      if (fnError) {
+        const msg = fnError.message || "";
+        const isNetworkOrSend =
+          /failed to send|fetch|network|load failed/i.test(msg) || msg.includes("Failed to fetch");
+        if (isNetworkOrSend) {
+          throw new Error(
+            "Could not reach the heart rate service. On deploy: set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to your Supabase project, and deploy the 'analyze-heartrate' Edge Function there (see README)."
+          );
+        }
+        throw fnError;
+      }
       if (data?.error) throw new Error(data.error);
 
       setResult(data as HeartRateResult);
@@ -146,7 +164,7 @@ export function HeartRateAnalysis({ onResult }: HeartRateAnalysisProps) {
       toast.success("Heart rate analysis complete");
     } catch (err: any) {
       console.error("Analysis error:", err);
-      toast.error(err.message || "Analysis failed. Please try again.");
+      toast.error(err?.message || "Analysis failed. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }

@@ -64,6 +64,26 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+### AI Heart Rate Analysis (Edge Function) on deploy
+
+If the **AI Heart Rate Analysis** shows "Failed to send a request to the Edge Function" on the deployed app:
+
+1. **Set environment variables** in your deployment (e.g. Lovable Project Settings / your host’s env):
+   - `VITE_SUPABASE_URL` – your Supabase project URL (e.g. `https://xxxxx.supabase.co`)
+   - `VITE_SUPABASE_PUBLISHABLE_KEY` – your project’s anon/public key
+
+2. **Deploy the Edge Function** to the **same** Supabase project:
+   ```sh
+   supabase functions deploy analyze-heartrate
+   ```
+
+3. **Set the function secret** in Supabase (Dashboard → Project Settings → Edge Functions → Secrets, or CLI):
+   ```sh
+   supabase secrets set LOVABLE_API_KEY=your_lovable_api_key
+   ```
+
+The deployed app must use the same Supabase project as where `analyze-heartrate` is deployed; otherwise the request will fail.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
