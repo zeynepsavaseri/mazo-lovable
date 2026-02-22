@@ -35,7 +35,7 @@ export default function NurseDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("patient_submissions")
-      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, red_flags, nurse_decision, status, created_at, queue_order")
+      .select("id, name, date_of_birth, gender, chief_complaint, pain_score, ai_triage_level, ai_summary, red_flags, risk_signals, triggered_by, confidence_level, risk_score, nurse_decision, status, created_at, queue_order")
       .eq("status", "waiting")
       .order("queue_order", { ascending: true })
       .order("created_at", { ascending: false });

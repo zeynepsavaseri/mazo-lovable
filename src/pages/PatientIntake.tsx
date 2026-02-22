@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { CameraModal } from "@/components/CameraModal";
 import { SmartSymptomAssessment, type SymptomAssessmentData } from "@/components/SmartSymptomAssessment";
 import { HeartRateAnalysis } from "@/components/HeartRateAnalysis";
+import { calculateRiskScore } from "@/lib/riskScore";
 
 // Symptom options now handled by SmartSymptomAssessment
 
@@ -153,6 +154,8 @@ export default function PatientIntake() {
         wearable_afib_details: wearableAfibDetails || null,
         previous_visit: previousVisit === "yes",
         attachments: attachments.map((a) => ({ type: a.type, name: a.name })),
+        status: "waiting",
+        queue_order: null,
       };
 
       // Get AI triage assessment
@@ -166,6 +169,10 @@ export default function PatientIntake() {
         console.warn("AI triage unavailable, saving without assessment");
       }
 
+      const riskScore = triageData.ai_triage_level
+        ? calculateRiskScore(triageData)
+        : null;
+
       // Save to database
       const { error: dbError } = await supabase.from("patient_submissions").insert({
         ...submissionData,
@@ -174,6 +181,7 @@ export default function PatientIntake() {
         ai_summary: triageData.ai_summary || null,
         red_flags: triageData.red_flags || [],
         risk_signals: triageData.risk_signals || [],
+        risk_score: riskScore,
         missing_questions: triageData.missing_questions || [],
       });
 
