@@ -125,19 +125,30 @@ export function SortablePatientRow({
 
       {/* AI Flag */}
       <TableCell>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-1.5">
           {sub.ai_triage_level ? (
             <TriageBadge level={sub.ai_triage_level as TriageLevel} />
           ) : (
             <span className="text-xs text-muted-foreground italic">Pending</span>
           )}
           {sub.acuity_score != null && (
-            <span className={cn(
-              "text-xs font-bold tabular-nums",
-              sub.acuity_score >= 70 ? "text-triage-high" : sub.acuity_score >= 40 ? "text-triage-moderate" : "text-triage-low"
-            )}>
-              {sub.acuity_score}
-            </span>
+            <div className="flex items-center gap-2 w-24">
+              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-500",
+                    sub.acuity_score >= 70 ? "bg-triage-high" : sub.acuity_score >= 40 ? "bg-triage-moderate" : "bg-triage-low"
+                  )}
+                  style={{ width: `${sub.acuity_score}%` }}
+                />
+              </div>
+              <span className={cn(
+                "text-[10px] font-bold tabular-nums shrink-0",
+                sub.acuity_score >= 70 ? "text-triage-high" : sub.acuity_score >= 40 ? "text-triage-moderate" : "text-triage-low"
+              )}>
+                {sub.acuity_score}
+              </span>
+            </div>
           )}
         </div>
       </TableCell>
