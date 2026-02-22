@@ -20,7 +20,7 @@ export function AppHeader() {
           </div>
           <div className="flex flex-col">
             <span className="font-display text-lg font-bold tracking-tight text-foreground leading-tight">
-              MAZOflow
+              TriageAI
             </span>
             <span className="text-[10px] font-medium text-muted-foreground/70 tracking-widest uppercase leading-tight">
               Clinical Platform
