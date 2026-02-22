@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import type { TriageLevel } from "@/data/types";
+import { toast } from "sonner";
 import {
   ArrowLeft, AlertTriangle, Brain, Heart, Pill, Activity,
-  Clock, HelpCircle, User, Phone, MapPin, Weight, ShieldAlert,
+  Clock, HelpCircle, User, Phone, MapPin, Weight, ShieldAlert, Loader2, RefreshCw, Sparkles,
 } from "lucide-react";
 
 interface FullSubmission {
@@ -50,6 +51,7 @@ export default function PatientDetail() {
   const navigate = useNavigate();
   const [patient, setPatient] = useState<FullSubmission | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -67,6 +69,56 @@ export default function PatientDetail() {
     };
     fetch();
   }, [id]);
+
+  const generateAISummary = async () => {
+    if (!patient) return;
+    setGeneratingSummary(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("triage-patient", {
+        body: {
+          name: patient.name,
+          date_of_birth: patient.date_of_birth,
+          gender: patient.gender,
+          weight: patient.weight,
+          allergies: patient.allergies,
+          chief_complaint: patient.chief_complaint,
+          symptom_onset: patient.symptom_onset,
+          pain_score: patient.pain_score,
+          symptoms: patient.symptoms,
+          medical_history: patient.medical_history,
+          medications: patient.medications,
+          wearable_heart_rate: patient.wearable_heart_rate,
+        },
+      });
+      if (error) throw error;
+      if (data) {
+        // Update DB
+        await supabase.from("patient_submissions").update({
+          ai_triage_level: data.ai_triage_level || patient.ai_triage_level,
+          acuity_score: data.acuity_score ?? null,
+          ai_summary: data.ai_summary || null,
+          red_flags: data.red_flags || [],
+          risk_signals: data.risk_signals || [],
+          missing_questions: data.missing_questions || [],
+        }).eq("id", patient.id);
+
+        setPatient((prev) => prev ? {
+          ...prev,
+          ai_triage_level: data.ai_triage_level || prev.ai_triage_level,
+          ai_summary: data.ai_summary || prev.ai_summary,
+          red_flags: data.red_flags || prev.red_flags,
+          risk_signals: data.risk_signals || prev.risk_signals,
+          missing_questions: data.missing_questions || prev.missing_questions,
+        } : null);
+        toast.success("AI summary generated successfully");
+      }
+    } catch (err) {
+      console.error("AI summary error:", err);
+      toast.error("Failed to generate AI summary");
+    } finally {
+      setGeneratingSummary(false);
+    }
+  };
 
   const getAge = (dob: string | null) => {
     if (!dob) return null;
@@ -133,19 +185,39 @@ export default function PatientDetail() {
 
         <div className="space-y-6">
           {/* AI Summary */}
-          {patient.ai_summary && (
-            <Card className="border-primary/20 bg-accent/30">
-              <CardHeader className="pb-3">
+          <Card className="border-primary/20 bg-accent/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Brain className="h-5 w-5 text-primary" />
                   AI-Structured Summary
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={generateAISummary}
+                  disabled={generatingSummary}
+                >
+                  {generatingSummary ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : patient.ai_summary ? (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  {generatingSummary ? "Generating..." : patient.ai_summary ? "Regenerate" : "Generate"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {patient.ai_summary ? (
                 <p className="leading-relaxed text-foreground">{patient.ai_summary}</p>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <p className="text-sm text-muted-foreground">No AI summary yet. Click "Generate" to create one using Gemini 2.5 Pro.</p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Personal & Contact Info */}
           <div className="grid gap-6 md:grid-cols-2">
