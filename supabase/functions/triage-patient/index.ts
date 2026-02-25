@@ -38,7 +38,7 @@ Assess the triage level and provide clinical analysis.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-3-pro-preview",
         messages: [
           { role: "system", content: "You are an ER triage AI. Provide accurate clinical triage assessments." },
           { role: "user", content: prompt },
